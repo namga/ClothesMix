@@ -1,0 +1,1342 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#55795A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tủ Đồ Ảo">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>html{padding-top:env(safe-area-inset-top,0px)}body{margin:0}
+/* Chi tiết món đồ: ảnh nổi bật, thông tin phân cấp rõ và thao tác dễ chạm trên điện thoại */
+.item-detail { display:flex; flex-direction:column; gap:16px; padding-bottom:12px; }
+.item-visual { position:relative; height:clamp(250px, 42vh, 390px); min-height:250px; overflow:hidden; border:1px solid var(--line); border-radius:24px; display:flex; align-items:center; justify-content:center; background-color:var(--photo); }
+.item-visual > img { width:100%; height:100%; object-fit:contain; padding:18px; }
+.item-visual-label { position:absolute; left:14px; top:14px; padding:7px 11px; border-radius:999px; color:var(--ink); background:var(--surface); border:1px solid var(--line); font-size:11px; font-weight:700; box-shadow:var(--shadow); }
+.item-hero-heart { position:absolute!important; right:14px; top:14px; background:var(--surface)!important; box-shadow:var(--shadow); }
+.item-title-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.item-title-row h2 { margin:3px 0 2px; font:700 24px/1.2 var(--f-display); letter-spacing:-.4px; }
+.item-title-row .sub { margin:4px 0 0; }
+.eyebrow { color:var(--primary); font-size:10px; letter-spacing:1.4px; font-weight:700; }
+.item-color { width:25px; height:25px; flex:0 0 25px; border-radius:50%; border:3px solid var(--surface); outline:1px solid var(--line); }
+.item-tags { display:flex; flex-wrap:wrap; gap:7px; }
+.item-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.item-stats > div { min-width:0; display:flex; flex-direction:column; gap:5px; padding:12px 10px; border-radius:16px; background:var(--panel); }
+.item-stats b { font-size:14px; line-height:1.25; overflow-wrap:anywhere; }
+.item-stats small { font-size:10px; line-height:1.35; color:var(--muted); }
+.stat-icon { display:flex; color:var(--primary); }
+.stat-icon .i { width:17px; height:17px; }
+.item-value { padding:14px 16px; border:1px solid var(--line); border-radius:16px; background:var(--surface); }
+.item-value > span { color:var(--muted); font-size:12px; }
+.item-value > b { float:right; font-size:15px; }
+.item-value p { margin:7px 0 0; color:var(--muted); font-size:11px; }
+.item-main-action { min-height:50px; border-radius:15px; }
+.item-secondary-action { min-height:46px; border-radius:15px; }
+.item-delete { margin-top:2px; }
+.item-photo-actions { display:flex; gap:8px; margin-top:10px; }
+.item-photo-actions .btn { flex:1; min-width:0; }
+.trend-hint { display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:13px; background:var(--soft); color:var(--forest); font-size:12px; }
+@media (max-width:380px) {
+  .item-visual { height:240px; min-height:240px; }
+  .item-title-row h2 { font-size:21px; }
+  .item-stats { gap:6px; }
+  .item-stats > div { padding:10px 7px; }
+  .item-stats b { font-size:12px; }
+  .item-stats small { font-size:9px; }
+}
+
+</style>
+<title>Tủ Đồ Ảo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lora:wght@600;700&display=swap">
+<style>
+/* Bố cục: một cột kích thước điện thoại, nền kem xanh, thẻ trắng bo tròn, thanh tab 5 mục với nút Thêm nổi ở giữa. Xanh sage là màu chính, xanh rừng đậm cho tiêu đề và banner. */
+:root {
+  --bg: #FAF9F4; --surface: #FFFFFF; --panel: #EBF1E8; --ink: #1D2A22; --muted: #66736A; --line: #E4E9DF;
+  --primary: #55795A; --primary-ink: #FFFFFF; --soft: #DCE8D9; --forest: #1F4D32; --forest-ink: #FFFFFF;
+  --warn: #86570B; --warn-soft: #F6E8CC; --danger: #A33A3A; --scrim: rgba(16, 28, 20, .45);
+  --check-a: #FFFFFF; --check-b: #E9EDE6; --photo: #EFF1EA; --shadow: 0 6px 18px rgba(31, 77, 50, .08);
+  --f-display: 'Lora', Georgia, 'Times New Roman', serif;
+  --f-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111915; --surface: #1A251E; --panel: #223027; --ink: #E7EFE8; --muted: #9AAA9E; --line: #2C3A31;
+    --primary: #7FA683; --primary-ink: #0E1A12; --soft: #2B3D30; --forest: #B5DDB9; --forest-ink: #0E1A12;
+    --warn: #E3B35C; --warn-soft: #3A2E14; --danger: #E58C8C; --scrim: rgba(0, 0, 0, .6);
+    --check-a: #26352B; --check-b: #1F2C24; --photo: #223027; --shadow: 0 6px 18px rgba(0, 0, 0, .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111915; --surface: #1A251E; --panel: #223027; --ink: #E7EFE8; --muted: #9AAA9E; --line: #2C3A31;
+  --primary: #7FA683; --primary-ink: #0E1A12; --soft: #2B3D30; --forest: #B5DDB9; --forest-ink: #0E1A12;
+  --warn: #E3B35C; --warn-soft: #3A2E14; --danger: #E58C8C; --scrim: rgba(0, 0, 0, .6);
+  --check-a: #26352B; --check-b: #1F2C24; --photo: #223027; --shadow: 0 6px 18px rgba(0, 0, 0, .3);
+  color-scheme: dark;
+}
+/* Bảng màu có thể đổi trong Cài đặt */
+:root[data-accent="sage"] { --primary:#55795A; --primary-ink:#FFFFFF; --soft:#DCE8D9; --forest:#1F4D32; }
+:root[data-accent="rose"] { --primary:#B65370; --primary-ink:#FFFFFF; --soft:#F7DFE7; --forest:#793047; }
+:root[data-accent="ocean"] { --primary:#287A9B; --primary-ink:#FFFFFF; --soft:#D9EDF5; --forest:#164B63; }
+:root[data-accent="amber"] { --primary:#A86B17; --primary-ink:#FFFFFF; --soft:#F7E8CC; --forest:#70420B; }
+:root[data-accent="violet"] { --primary:#7856A8; --primary-ink:#FFFFFF; --soft:#E9E0F5; --forest:#4A326F; }
+:root[data-accent="coral"] { --primary:#D65F50; --primary-ink:#FFFFFF; --soft:#FBE3DE; --forest:#85382F; }
+:root[data-accent="mint"] { --primary:#168B78; --primary-ink:#FFFFFF; --soft:#D8F3EC; --forest:#0C594E; }
+:root[data-accent="navy"] { --primary:#3456A1; --primary-ink:#FFFFFF; --soft:#DFE7FA; --forest:#20396F; }
+:root[data-accent="lavender"] { --primary:#9673D0; --primary-ink:#FFFFFF; --soft:#EEE5FC; --forest:#5C438A; }
+:root[data-accent="chocolate"] { --primary:#8B5E3C; --primary-ink:#FFFFFF; --soft:#F1E2D5; --forest:#583923; }
+:root[data-accent="slate"] { --primary:#596B7B; --primary-ink:#FFFFFF; --soft:#E1E8EF; --forest:#344553; }
+:root[data-accent="lime"] { --primary:#658B2E; --primary-ink:#FFFFFF; --soft:#E8F2D6; --forest:#3B571B; }
+:root[data-accent="berry"] { --primary:#A23B72; --primary-ink:#FFFFFF; --soft:#F7DFEC; --forest:#6C244B; }
+:root[data-accent="coral"][data-theme="dark"] { --primary:#F08C7D; --primary-ink:#30110D; --soft:#4A2925; --forest:#FFC1B7; }
+:root[data-accent="mint"][data-theme="dark"] { --primary:#69D3BD; --primary-ink:#092B25; --soft:#1D4039; --forest:#A5F0DF; }
+:root[data-accent="navy"][data-theme="dark"] { --primary:#91ACF3; --primary-ink:#101D3B; --soft:#273552; --forest:#C3D2FF; }
+:root[data-accent="lavender"][data-theme="dark"] { --primary:#C3A8F4; --primary-ink:#26183D; --soft:#3B2E51; --forest:#E0D0FF; }
+:root[data-accent="chocolate"][data-theme="dark"] { --primary:#D2A27D; --primary-ink:#2D1C10; --soft:#403126; --forest:#EBD0B8; }
+:root[data-accent="slate"][data-theme="dark"] { --primary:#A9BED0; --primary-ink:#17232D; --soft:#2D3B47; --forest:#D0E0EC; }
+:root[data-accent="lime"][data-theme="dark"] { --primary:#B5D77C; --primary-ink:#1C2A0D; --soft:#344328; --forest:#D7F0AB; }
+:root[data-accent="berry"][data-theme="dark"] { --primary:#E59AC2; --primary-ink:#351426; --soft:#48293B; --forest:#F4C0DE; }
+/* Solid: tương phản rõ hơn, bề mặt chắc và điểm nhấn màu đậm */
+:root[data-ui="solid"] { --panel:var(--soft); --shadow:0 8px 22px rgba(25,35,45,.12); }
+:root[data-ui="solid"] .card, :root[data-ui="solid"] .pstat, :root[data-ui="solid"] .pstat, :root[data-ui="solid"] .item-value { border-color:color-mix(in srgb,var(--primary) 22%,var(--line)); }
+:root[data-ui="solid"] .btn.primary, :root[data-ui="solid"] .tabs .active { box-shadow:0 5px 14px color-mix(in srgb,var(--primary) 24%,transparent); }
+:root[data-ui="solid"] .chip[aria-pressed="true"] { background:var(--primary); color:var(--primary-ink); border-color:var(--primary); }
+
+:root[data-theme="dark"][data-accent="sage"] { --primary:#7FA683; --primary-ink:#0E1A12; --soft:#2B3D30; --forest:#B5DDB9; }
+:root[data-theme="dark"][data-accent="rose"] { --primary:#E58BA5; --primary-ink:#32121D; --soft:#452633; --forest:#F0B6C7; }
+:root[data-theme="dark"][data-accent="ocean"] { --primary:#78C3E0; --primary-ink:#09202B; --soft:#203945; --forest:#A7DDF1; }
+:root[data-theme="dark"][data-accent="amber"] { --primary:#E7B768; --primary-ink:#2B1B05; --soft:#3A2E14; --forest:#F0D09A; }
+:root[data-theme="dark"][data-accent="violet"] { --primary:#BDA0EA; --primary-ink:#20142F; --soft:#352943; --forest:#D6C2F4; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-accent="coral"] { --primary:#F08C7D; --primary-ink:#30110D; --soft:#4A2925; --forest:#FFC1B7; }
+  :root:not([data-theme="light"])[data-accent="mint"] { --primary:#69D3BD; --primary-ink:#092B25; --soft:#1D4039; --forest:#A5F0DF; }
+  :root:not([data-theme="light"])[data-accent="navy"] { --primary:#91ACF3; --primary-ink:#101D3B; --soft:#273552; --forest:#C3D2FF; }
+  :root:not([data-theme="light"])[data-accent="lavender"] { --primary:#C3A8F4; --primary-ink:#26183D; --soft:#3B2E51; --forest:#E0D0FF; }
+  :root:not([data-theme="light"])[data-accent="chocolate"] { --primary:#D2A27D; --primary-ink:#2D1C10; --soft:#403126; --forest:#EBD0B8; }
+  :root:not([data-theme="light"])[data-accent="slate"] { --primary:#A9BED0; --primary-ink:#17232D; --soft:#2D3B47; --forest:#D0E0EC; }
+  :root:not([data-theme="light"])[data-accent="lime"] { --primary:#B5D77C; --primary-ink:#1C2A0D; --soft:#344328; --forest:#D7F0AB; }
+  :root:not([data-theme="light"])[data-accent="berry"] { --primary:#E59AC2; --primary-ink:#351426; --soft:#48293B; --forest:#F4C0DE; }
+  :root:not([data-theme="light"])[data-accent="rose"] { --primary:#E58BA5; --primary-ink:#32121D; --soft:#452633; --forest:#F0B6C7; }
+  :root:not([data-theme="light"])[data-accent="ocean"] { --primary:#78C3E0; --primary-ink:#09202B; --soft:#203945; --forest:#A7DDF1; }
+  :root:not([data-theme="light"])[data-accent="amber"] { --primary:#E7B768; --primary-ink:#2B1B05; --soft:#3A2E14; --forest:#F0D09A; }
+  :root:not([data-theme="light"])[data-accent="violet"] { --primary:#BDA0EA; --primary-ink:#20142F; --soft:#352943; --forest:#D6C2F4; }
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { font-family: var(--f-display); color: var(--forest); text-wrap: balance; }
+.app { max-width: 520px; margin: 0 auto; padding-inline: 16px; padding-block: 10px 112px; }
+.num { font-variant-numeric: tabular-nums; }
+svg.i { width: 20px; height: 20px; flex: none; }
+
+/* Tiêu đề trang */
+.hd { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-block: 6px 14px; }
+.hd h1 { font-size: 30px; line-height: 1.15; }
+.sub { color: var(--muted); font-size: 13px; }
+.wx { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 4px 0; font-size: 14px; margin-top: 4px; }
+.wx svg.i { color: #D9A21B; width: 22px; height: 22px; }
+.wx b { font-size: 16px; }
+.wx span { color: var(--muted); }
+.leaf-badge { width: 52px; height: 52px; border-radius: 50%; background: var(--soft); color: var(--forest); display: grid; place-items: center; flex: none; }
+.leaf-badge svg.i { width: 26px; height: 26px; }
+.deco { position: absolute; top: 0; right: 0; width: 160px; color: var(--primary); opacity: .14; pointer-events: none; }
+.relative { position: relative; }
+
+/* Nút */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 9px 16px; font-weight: 500; min-height: 42px; }
+.btn.primary { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); font-weight: 600; }
+.btn.soft { background: var(--soft); border-color: var(--soft); color: var(--forest); font-weight: 600; }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); }
+.btn.sm { padding: 5px 12px; min-height: 32px; font-size: 13px; }
+.btn.block { width: 100%; }
+.btn.lg { min-height: 50px; font-size: 16px; justify-content: space-between; padding-inline: 20px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Chip */
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-block: 2px 6px; margin-bottom: 8px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chips.wrap { flex-wrap: wrap; overflow: visible; margin-bottom: 0; }
+.chip { flex: none; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; font-size: 13px; white-space: nowrap; }
+.chip svg.i { width: 16px; height: 16px; }
+.chip[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); font-weight: 600; }
+.pill { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3px 10px; background: var(--soft); color: var(--forest); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+
+/* Ô tìm kiếm */
+.search { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px 6px 4px 16px; margin-bottom: 12px; color: var(--muted); }
+.search input { flex: 1; min-width: 0; border: 0; background: none; padding: 9px 0; outline: none; color: var(--ink); }
+.search .btn { border: 0; background: transparent; width: 38px; min-height: 38px; padding: 0; color: var(--muted); }
+
+/* Hero outfit */
+.hero { background: var(--panel); border-radius: 22px; padding: 14px; display: grid; gap: 12px; margin-bottom: 18px; position: relative; overflow: hidden; }
+.tag { display: inline-flex; align-items: center; gap: 6px; background: var(--soft); color: var(--forest); font-size: 12px; font-weight: 600; letter-spacing: .05em; border-radius: 999px; padding: 5px 12px; justify-self: start; }
+.tag svg.i { width: 14px; height: 14px; }
+.compose { display: grid; gap: 4px; cursor: pointer; background: none; border: 0; padding: 0; text-align: left; }
+.crow { display: flex; gap: 4px; justify-content: center; }
+.cp { flex: 1; min-width: 0; display: grid; place-items: center; }
+.crow.big .cp { height: 176px; }
+.crow.small .cp { height: 84px; }
+.cp svg, .cp img { max-width: 100%; max-height: 100%; width: auto; height: 100%; filter: drop-shadow(0 6px 7px rgba(0, 0, 0, .14)); }
+.feat { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--surface); border-radius: 16px; padding: 10px 4px; }
+.feat > div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px; align-items: center; padding: 2px 8px; border-right: 1px solid var(--line); }
+.feat > div:last-child { border-right: 0; }
+.feat svg.i { color: var(--primary); width: 22px; height: 22px; }
+.feat b { display: block; font-size: 12px; font-weight: 600; line-height: 1.25; }
+.feat small { display: block; font-size: 11px; color: var(--muted); line-height: 1.25; }
+.sec-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.sec-row h2 { font-size: 20px; }
+.link { background: none; border: 0; color: var(--muted); padding: 4px 0; display: inline-flex; align-items: center; gap: 2px; }
+.alts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.alt { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: grid; min-width: 0; }
+.alt-img { background: var(--photo); display: flex; gap: 2px; justify-content: center; padding: 10px 6px; height: 112px; }
+.alt-img .cp { height: 100%; }
+.alt-body { padding: 10px; display: grid; gap: 6px; justify-items: start; }
+.alt-body .sub { display: flex; align-items: center; gap: 4px; }
+.alt-body .sub svg.i { width: 14px; height: 14px; color: var(--primary); }
+.note { font-size: 13px; color: var(--muted); background: var(--panel); border-radius: 14px; padding: 10px 14px; margin-bottom: 14px; }
+
+/* Người mẫu và AI */
+.stage { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 8px; align-items: center; }
+.fig { width: 100%; max-height: 360px; display: block; }
+.plist { display: grid; gap: 8px; min-width: 0; }
+.pl { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.pt { width: 46px; height: 46px; border-radius: 12px; overflow: hidden; display: grid; place-items: center; flex: none; border: 1px solid var(--line); }
+.pt svg, .pt img { width: 86%; height: 86%; object-fit: contain; }
+.pl span { font-size: 11px; color: var(--muted); min-width: 0; flex: 1; }
+.pl b { display: block; font-size: 12.5px; color: var(--ink); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aicard { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 12px; display: grid; gap: 8px; margin-bottom: 14px; }
+.ai-top { display: flex; align-items: center; gap: 8px; color: var(--forest); font-family: var(--f-display); font-size: 16px; }
+.ai-top svg.i { color: var(--primary); }
+.ai-row { display: flex; gap: 8px; }
+.ai-row input { flex: 1; min-width: 0; min-height: 42px; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 6px 14px; }
+.ainote { background: var(--surface); border-radius: 14px; padding: 10px 12px; font-size: 13px; display: grid; gap: 4px; }
+.ainote b { color: var(--forest); display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.ainote b svg.i { width: 15px; height: 15px; color: var(--primary); }
+
+/* Tủ đồ */
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.citem { position: relative; background: none; border: 0; padding: 0; text-align: left; min-width: 0; display: block; }
+.ctile { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; display: grid; place-items: center; border: 1px solid var(--line); }
+.checker { background: conic-gradient(var(--check-a) 25%, var(--check-b) 0 50%, var(--check-a) 0 75%, var(--check-b) 0) 0 0 / 16px 16px; }
+.ctile svg, .ctile img { width: 86%; height: 86%; object-fit: contain; }
+.citem .nm { font-size: 12px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.citem .mt { font-size: 11px; color: var(--muted); }
+.heart { position: absolute; top: 4px; right: 4px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .0); color: var(--muted); display: grid; place-items: center; padding: 0; }
+.heart svg.i { width: 18px; height: 18px; }
+.heart.on { color: var(--primary); }
+.heart.on svg { fill: currentColor; }
+.badge { position: absolute; top: 6px; left: 6px; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 2px 9px; background: var(--primary); color: var(--primary-ink); z-index: 1; }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.grey { background: rgba(70, 80, 74, .72); color: #fff; }
+.empty { text-align: center; color: var(--muted); padding: 36px 12px; grid-column: 1 / -1; }
+
+/* Marketplace */
+.mtabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+.mtabs button { background: none; border: 0; padding: 12px 4px; color: var(--muted); font-size: 15px; font-weight: 500; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.mtabs button[aria-selected="true"] { color: var(--forest); font-weight: 700; border-bottom-color: var(--forest); }
+.mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; background: var(--panel); border-radius: 20px; padding: 10px; margin-bottom: 14px; }
+.mcard { background: var(--surface); border-radius: 14px; padding: 6px; min-width: 0; text-align: left; border: 0; display: block; position: relative; box-shadow: var(--shadow); }
+.mcard .photo { position: relative; aspect-ratio: 1; background: var(--photo); border-radius: 10px; display: grid; place-items: center; overflow: hidden; }
+.mcard .photo svg, .mcard .photo img { width: 82%; height: 82%; object-fit: contain; }
+.mcard .nm { font-size: 13px; margin-top: 6px; line-height: 1.3; min-height: 2.6em; }
+.mcard .br { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcard .pf { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; }
+.price { font-weight: 700; color: var(--forest); font-size: 14px; }
+.mcard .heart { position: static; width: 28px; height: 28px; }
+.sold-tag { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(20, 30, 24, .45); color: #fff; font-weight: 700; letter-spacing: .06em; }
+.cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--forest); color: var(--forest-ink); border-radius: 20px; padding: 14px 16px; position: relative; overflow: hidden; }
+.cta .ic { width: 46px; height: 46px; border-radius: 50%; background: rgba(255, 255, 255, .14); display: grid; place-items: center; flex: none; }
+.cta .tx { flex: 1; min-width: 0; }
+.cta b { display: block; font-family: var(--f-display); font-size: 16px; }
+.cta small { opacity: .85; }
+.cta .btn { background: #fff; color: #1F4D32; border-color: #fff; font-weight: 600; flex: none; }
+
+/* Hồ sơ */
+.pstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+.pstat { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.pstat b { display: block; font-family: var(--f-display); font-size: 26px; color: var(--forest); line-height: 1.1; }
+.pstat span { font-size: 12px; color: var(--muted); }
+.list { display: grid; gap: 8px; margin-bottom: 18px; }
+.lrow { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 8px 12px 8px 8px; min-width: 0; }
+.lrow .th { width: 52px; height: 52px; border-radius: 10px; background: var(--photo); display: grid; place-items: center; flex: none; overflow: hidden; }
+.lrow .th svg, .lrow .th img { width: 84%; height: 84%; object-fit: contain; }
+.lrow .tx { flex: 1; min-width: 0; }
+.lrow .tx b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thumbs { display: flex; gap: 4px; }
+.thumbs .th { width: 40px; height: 40px; }
+.foot { margin-top: 20px; font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* Thanh tab */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.tabs-in { max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; }
+.tabs button { background: none; border: 0; display: grid; justify-items: center; gap: 2px; padding: 9px 2px 8px; color: var(--muted); font-size: 11.5px; font-weight: 500; }
+.tabs button svg.i { width: 24px; height: 24px; }
+.tabs button[aria-current="page"] { color: var(--primary); font-weight: 600; }
+.tabs .plus { color: var(--forest); }
+.tabs .plus span.c { width: 50px; height: 50px; border-radius: 50%; background: var(--forest); color: var(--forest-ink); display: grid; place-items: center; margin-top: -22px; box-shadow: 0 6px 14px rgba(31, 77, 50, .3); }
+.tabs .plus svg.i { width: 26px; height: 26px; }
+
+/* Ngăn kéo */
+.sheet { position: fixed; inset: 0; z-index: 40; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); }
+.sheet-panel { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: min(520px, 100%); max-height: 92%; overflow-y: auto; background: var(--bg); border-radius: 24px 24px 0 0; padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px; align-content: start; }
+.sheet-panel.tall { height: 96%; border-radius: 24px 24px 0 0; }
+.sheet-panel:focus { outline: none; }
+.sh-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sh-head h2 { font-size: 20px; }
+.round { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; padding: 0; }
+.fields { display: grid; gap: 12px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > label, .lbl { font-size: 12px; font-weight: 600; color: var(--muted); }
+.field input[type="text"], .field input[type="number"], .field select { width: 100%; min-height: 44px; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 8px 14px; }
+.field input[type="color"] { width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 4px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cam { background: #14201A; color: #E9F2EA; border-radius: 22px; padding: 16px; display: grid; gap: 14px; justify-items: center; }
+.frame { width: 100%; aspect-ratio: 16 / 10; position: relative; display: grid; place-items: center; text-align: center; padding: 12px; }
+.frame::before, .frame::after { content: ''; position: absolute; width: 28px; height: 28px; border: 3px solid #C9DEC8; }
+.frame::before { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
+.frame::after { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 8px 0; }
+.frame b { color: #C9DEC8; font-size: 14px; letter-spacing: .04em; display: block; }
+.frame small { opacity: .8; }
+.cam-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.shutter { width: 64px; height: 64px; border-radius: 50%; border: 4px solid #C9DEC8; background: #fff; display: block; cursor: pointer; }
+.cam .round { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .2); color: #fff; cursor: pointer; }
+.vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+.shutter { padding: 0; }
+.res { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.res .box { border-radius: 18px; border: 1px solid var(--line); aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; }
+.res .box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.autotag { background: var(--primary); color: var(--primary-ink); border-radius: 18px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; font-size: 13px; }
+.autotag h3 { color: inherit; font-family: var(--f-body); font-size: 13px; font-weight: 600; display: flex; gap: 6px; align-items: center; }
+.autotag h3 svg.i { width: 16px; height: 16px; }
+.autotag .kv { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(255, 255, 255, .25); }
+.autotag .kv i { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .8); flex: none; }
+.autotag .kv small { display: block; opacity: .85; font-size: 11px; }
+.check { display: inline-flex; align-items: center; gap: 8px; }
+.check input { width: 18px; height: 18px; accent-color: var(--primary); }
+.temp-row { display: flex; align-items: center; gap: 12px; }
+.temp-row output { font-family: var(--f-display); font-size: 26px; font-weight: 700; min-width: 3.4ch; color: var(--forest); }
+input[type="range"] { flex: 1; min-width: 0; accent-color: var(--primary); }
+.kvg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kvg div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 10px; }
+.kvg b { display: block; font-family: var(--f-display); font-size: 18px; line-height: 1.2; color: var(--forest); }
+.kvg span { font-size: 11px; color: var(--muted); }
+.big-tile { border-radius: 20px; aspect-ratio: 4 / 3; max-height: 260px; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--line); max-width: 100%; }
+.big-tile svg, .big-tile img { height: 88%; max-width: 88%; object-fit: contain; }
+.acts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.eco { display: flex; align-items: center; gap: 12px; background: var(--panel); border-radius: 18px; padding: 12px 14px; }
+.eco svg.i { width: 30px; height: 30px; color: var(--primary); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(86px + env(safe-area-inset-bottom, 0px)); z-index: 60; background: var(--forest); color: var(--forest-ink); border-radius: 14px; padding: 10px 16px; max-width: min(92vw, 440px); font-size: 13px; text-align: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .sheet-panel { animation: up .22s ease-out; }
+  @keyframes up { from { transform: translate(-50%, 24px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+}
+@media (max-width: 380px) { .feat small { display: none; } .hd h1 { font-size: 26px; } }
+</style>
+</head>
+<body>
+
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="shade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".24"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>
+</defs></svg>
+
+<div class="app"><main id="view"></main></div>
+
+<nav class="tabs" aria-label="Điều hướng chính"><div class="tabs-in" id="tabs"></div></nav>
+
+<div id="sheet" class="sheet" hidden>
+  <div class="scrim" data-act="close"></div>
+  <div class="sheet-panel" id="sheet-panel" role="dialog" aria-modal="true" tabindex="-1"></div>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'tudoao.v2';
+
+  /* ---------- Biểu tượng ---------- */
+  var IC = {
+    home: '<path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    closet: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9 11v2M15 11v2"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    bag: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    heart: '<path d="M12 20s-7-4.5-9-9.2C1.8 7.3 4 4.5 7 4.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3 0 5.2 2.8 4 6.3C19 15.5 12 20 12 20z"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    sliders: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+    rain: '<path d="M7 15a4 4 0 1 1 1-7.9A5 5 0 0 1 17.5 9 3.5 3.5 0 0 1 17 16H7z"/><path d="m9 19-1 2M13 19l-1 2M17 19l-1 2"/>',
+    shuffle: '<path d="M3 7h4l10 10h4M3 17h4l3-3M14 10l3-3h4M18 4l3 3-3 3M18 14l3 3-3 3"/>',
+    spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+    leaf: '<path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14z"/><path d="M5 19c3-5 6-8 10-10"/>',
+    recycle: '<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/>',
+    hanger: '<path d="M12 7a2.2 2.2 0 1 0-2.2-2.2"/><path d="M12 7v2L3.5 15.2A1.2 1.2 0 0 0 4.2 17.5h15.6a1.2 1.2 0 0 0 .7-2.3L12 9"/>',
+    chev: '<path d="m9 6 6 6-6 6"/>',
+    back: '<path d="M15 6l-6 6 6 6"/>',
+    camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m21 16-5-5-8 8"/>',
+    tag: '<path d="M3 3h8l10 10-8 8L3 11z"/><circle cx="7.5" cy="7.5" r="1.3"/>',
+    share: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',
+    bookmark: '<path d="M6 3h12v18l-6-4-6 4z"/>',
+    x: '<path d="M6 6l12 12M18 6 6 18"/>',
+    grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+  };
+  function ic(n, cls) { return '<svg class="i ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[n] + '</svg>'; }
+
+  /* ---------- Hằng số ---------- */
+  var CATS = {
+    ao: { label: 'Áo', slot: 'top' }, quan: { label: 'Quần', slot: 'bottom' }, vay: { label: 'Váy', slot: 'dress' },
+    khoac: { label: 'Áo khoác', slot: 'outer' }, giay: { label: 'Giày', slot: 'shoes' }, phukien: { label: 'Phụ kiện', slot: 'acc' }
+  };
+  var SLOTNAME = { top: 'Áo', bottom: 'Quần', dress: 'Váy', outer: 'Khoác ngoài', shoes: 'Giày', acc: 'Phụ kiện' };
+  function catLabel(k) { if (k === 'vay') return S.gender === 'male' ? 'Váy / đồ liền (khác)' : S.gender === 'female' ? 'Váy / Đầm' : 'Váy / Đầm'; return CATS[k] ? CATS[k].label : 'Khác'; }
+  var STYLES = ['Tối giản', 'Năng động', 'Thanh lịch'];
+  var WARM = { 1: 'Mát', 2: 'Vừa', 3: 'Ấm' };
+  var WEATHER = [
+    { label: 'Nắng nóng', t: 34, r: false }, { label: 'Dễ chịu', t: 26, r: false },
+    { label: 'Se lạnh', t: 17, r: false }, { label: 'Mưa', t: 24, r: true }
+  ];
+  var MODES = { ban: 'Bán', doi: 'Trao đổi', kygui: 'Ký gửi' };
+  var OTHERS = [
+    { id: 'o1', name: 'Váy len đen', brand: 'Cỏ May', cat: 'vay', color: '#232426', size: 'S', mode: 'ban', price: 150000, cond: 90, place: 'Quận 1, TP.HCM', who: 'Linh' },
+    { id: 'o2', name: 'Áo khoác bomber rêu', brand: 'Mộc Studio', cat: 'khoac', color: '#6B7A4F', size: 'M', mode: 'doi', wish: 'Quần jeans size 29', cond: 85, place: 'Thủ Đức, TP.HCM', who: 'Khoa' },
+    { id: 'o3', name: 'Sneaker trắng', brand: 'Thô', cat: 'giay', color: '#E2E2DE', size: '39', mode: 'ban', price: 280000, cond: 85, place: 'Cầu Giấy, Hà Nội', who: 'Mai' },
+    { id: 'o4', name: 'Sơ mi trắng cotton', brand: 'Nhà Chàm', cat: 'ao', color: '#F1F1EE', size: 'L', mode: 'kygui', price: 120000, cond: 95, place: 'Hải Châu, Đà Nẵng', who: 'Cửa hàng Gió' },
+    { id: 'o5', name: 'Quần ống rộng be', brand: 'Lụa Xanh', cat: 'quan', color: '#CBBB9E', size: 'M', mode: 'ban', price: 170000, cond: 80, place: 'Đống Đa, Hà Nội', who: 'Thảo' },
+    { id: 'o6', name: 'Áo len cổ lọ đỏ đô', brand: 'Cỏ May', cat: 'ao', color: '#7A2E3A', size: 'S', mode: 'doi', wish: 'Áo len size S, màu trung tính', cond: 90, place: 'Ninh Kiều, Cần Thơ', who: 'Hạnh' },
+    { id: 'o7', name: 'Túi đeo vai kem', brand: 'Mộc Studio', cat: 'phukien', color: '#E4D9C2', size: 'Vừa', mode: 'ban', price: 350000, cond: 95, place: 'Quận 3, TP.HCM', who: 'Vy' },
+    { id: 'o8', name: 'Áo thun xanh lá', brand: 'Thô', cat: 'ao', color: '#8AA58A', size: 'M', mode: 'ban', price: 150000, cond: 80, place: 'Hoàn Kiếm, Hà Nội', who: 'Bảo' }
+  ];
+
+  var S = {
+    items: [], sold: [], saved: [], log: [], ofav: {}, weather: { t: 27, r: false }, style: 'Tối giản',
+    seed: 1, pick: 0, aiSet: null, occ: '', aiBusy: false, theme: 'system', accent: 'sage', ui: 'soft', gender: 'unisex', page: 'home', filter: 'all', genderFilter: 'all', q: '', mtab: 'mine', mfilter: 'all', mq: '', confirm: ''
+  };
+  var sensT;
+  var draft = { orig: null, url: null, cut: false, colorTouched: false, styles: [] };
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var vnd = function (n) { return Math.round(n).toLocaleString('vi-VN') + ' đ'; };
+  var uid = function () { return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); };
+  var DAY = 864e5;
+  var daysAgo = function (n) { return new Date(Date.now() - n * DAY).toISOString(); };
+  var since = function (iso) { return iso ? Math.floor((Date.now() - new Date(iso).getTime()) / DAY) : null; };
+  var sinceText = function (iso) { var d = since(iso); return d === null ? 'Chưa mặc' : d <= 0 ? 'Hôm nay' : d === 1 ? 'Hôm qua' : d + ' ngày trước'; };
+  var idle = function (it) { var d = since(it.lastWorn); return d === null ? 999 : d; };
+  var isStale = function (it) { return idle(it) >= 60; };
+  var itemBy = function (id) { return S.items.filter(function (x) { return x.id === id; })[0]; };
+  var condOf = function (it) { return it.wears <= 3 ? 'Như mới' : 'Tốt'; };
+
+  /* ---------- Dữ liệu ---------- */
+  function seedItems() {
+    function m(name, brand, size, cat, color, warmth, styles, price, wears, last, rain) {
+      return { id: uid(), name: name, brand: brand, size: size, cat: cat, gender: 'unisex', color: color, warmth: warmth, styles: styles, price: price, wears: wears, lastWorn: last === null ? null : daysAgo(last), photo: null, listing: null, rain: !!rain, fav: false };
+    }
+    var a = [
+      m('Áo thun trắng cotton', 'Thô', 'M', 'ao', '#F2F2EE', 1, ['Tối giản', 'Năng động'], 180000, 14, 3),
+      m('Sơ mi chàm', 'Nhà Chàm', 'M', 'ao', '#3E5A94', 2, ['Thanh lịch'], 350000, 6, 9),
+      m('Áo len kem', 'Cỏ May', 'M', 'ao', '#E7DFCF', 3, ['Tối giản'], 420000, 4, 40),
+      m('Polo xanh rêu', 'Mộc Studio', 'L', 'ao', '#7E9A78', 1, ['Năng động'], 250000, 2, 70),
+      m('Sơ mi lanh be', 'Lụa Xanh', 'M', 'ao', '#E1D6BF', 1, ['Tối giản', 'Thanh lịch'], 390000, 5, 21),
+      m('Quần jeans xanh đậm', 'Thô', '29', 'quan', '#34476B', 2, ['Tối giản', 'Năng động'], 520000, 20, 2),
+      m('Quần tây be', 'Lụa Xanh', '28', 'quan', '#CDBB98', 1, ['Thanh lịch', 'Tối giản'], 480000, 8, 12),
+      m('Quần short kaki', 'Mộc Studio', '29', 'quan', '#B9A57F', 1, ['Năng động'], 220000, 3, 85),
+      m('Quần tây đen', 'Nhà Chàm', '28', 'quan', '#222326', 2, ['Thanh lịch'], 480000, 7, 12),
+      m('Váy lanh trắng', 'Lụa Xanh', 'S', 'vay', '#F4F1EA', 1, ['Thanh lịch', 'Tối giản'], 390000, 1, 120),
+      m('Áo khoác gió', 'Mộc Studio', 'M', 'khoac', '#4F7A6B', 2, ['Năng động'], 650000, 9, 15, true),
+      m('Áo khoác denim', 'Thô', 'M', 'khoac', '#7FA2CE', 2, ['Năng động', 'Tối giản'], 480000, 0, null),
+      m('Sneaker trắng', 'Thô', '39', 'giay', '#EEEEEA', 1, ['Tối giản', 'Năng động'], 890000, 30, 1),
+      m('Giày da đen', 'Nhà Chàm', '39', 'giay', '#1B1B1D', 2, ['Thanh lịch'], 750000, 5, 30, true),
+      m('Túi đeo vai nâu', 'Cỏ May', 'Vừa', 'phukien', '#8A5A3C', 2, ['Thanh lịch', 'Tối giản'], 620000, 11, 6)
+    ];
+    a[4].fav = true; a[6].fav = true;
+    return a;
+  }
+  function applyAppearance() {
+    var root = document.documentElement;
+    if (S.theme === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', S.theme);
+    root.setAttribute('data-accent', S.accent || 'sage');
+    root.setAttribute('data-ui', S.ui || 'soft');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', ({sage:'#55795A',rose:'#B65370',ocean:'#287A9B',amber:'#A86B17',violet:'#7856A8',coral:'#D65F50',mint:'#168B78',navy:'#3456A1',lavender:'#9673D0',chocolate:'#8B5E3C',slate:'#596B7B',lime:'#658B2E',berry:'#A23B72'})[S.accent] || '#55795A');
+  }
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ items: S.items, sold: S.sold, saved: S.saved, log: S.log.slice(0, 30), ofav: S.ofav, weather: S.weather, style: S.style, theme: S.theme, accent: S.accent, ui: S.ui, gender: S.gender }));
+      return true;
+    } catch (e) { toast('Bộ nhớ trình duyệt đầy hoặc bị chặn, thay đổi chưa được lưu.'); return false; }
+  }
+  function load() {
+    try {
+      var d = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (d && d.items) {
+        S.items = d.items; S.items.forEach(function (it) { if (!it.gender) it.gender = 'unisex'; }); S.sold = d.sold || []; S.saved = d.saved || []; S.log = d.log || []; S.ofav = d.ofav || {};
+        S.weather = d.weather || S.weather; S.style = d.style == null ? S.style : d.style; S.theme = d.theme || 'system'; S.accent = d.accent || 'sage'; S.ui = d.ui || 'soft'; S.gender = d.gender || 'unisex'; applyAppearance(); return;
+      }
+    } catch (e) { /* dùng dữ liệu mẫu */ }
+    S.items = seedItems();
+  }
+
+  /* ---------- Hình minh hoạ đồ ---------- */
+  function kindOf(cat, name) {
+    var n = (name || '').toLowerCase();
+    if (cat === 'ao') return /thun|tee|ba lỗ/.test(n) ? 'tee' : /len|sweater|knit/.test(n) ? 'sweater' : 'shirt';
+    if (cat === 'quan') return /short/.test(n) ? 'shorts' : 'pants';
+    return cat;
+  }
+  var SH = {
+    tee: 'M32 22 48 14Q60 26 72 14L88 22 108 44 94 54 86 46V104H34V46L26 54 12 44Z',
+    shirt: 'M34 20 48 14 60 24 72 14 86 20 104 36 108 90 96 92 92 56H88V106H32V56H28L24 92 12 90 16 36Z',
+    sweater: 'M34 20 48 14Q60 26 72 14L86 20 104 36 108 92 96 94 92 58H88V106H32V58H28L24 94 12 92 16 36Z',
+    pants: 'M36 12H84L90 108H66L60 52 54 108H30Z',
+    shorts: 'M36 22H84L92 76H64L60 52 56 76H28Z',
+    vay: 'M46 10H52L60 30 68 10H74L78 38 102 108H18L42 38Z',
+    khoac: 'M36 16 50 10 60 22 70 10 84 16 104 32 110 94 98 96 94 62H90V108H30V62H26L22 96 10 94 16 32Z',
+    giay: 'M10 74Q10 66 20 64L44 62 54 50Q58 46 64 50L72 58 100 66Q112 70 112 80V90H10Z',
+    phukien: 'M26 50H94L100 102H20Z'
+  };
+  var DETAIL = {
+    tee: '<path d="M48 14Q60 30 72 14" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="1.6"/>',
+    shirt: '<path d="M48 14 60 34 52 40 42 22Z M72 14 60 34 68 40 78 22Z" fill="rgba(255,255,255,.4)" stroke="rgba(0,0,0,.2)" stroke-width="1.2"/><path d="M60 34V106" stroke="rgba(0,0,0,.22)" stroke-width="1.4"/><g fill="rgba(0,0,0,.3)"><circle cx="60" cy="50" r="1.5"/><circle cx="60" cy="64" r="1.5"/><circle cx="60" cy="78" r="1.5"/><circle cx="60" cy="92" r="1.5"/></g><path d="M38 52h14v12H38z" fill="none" stroke="rgba(0,0,0,.2)" stroke-width="1.2"/>',
+    sweater: '<path d="M48 14Q60 30 72 14" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="3"/><path d="M32 98H88" stroke="rgba(0,0,0,.2)" stroke-width="1.4"/><g stroke="rgba(0,0,0,.1)" stroke-width="1.2"><path d="M42 40V96M50 40V96M58 40V96M66 40V96M74 40V96M82 40V96"/></g>',
+    pants: '<path d="M36 20H84M60 20V52" stroke="rgba(0,0,0,.25)" stroke-width="1.4"/><path d="M46 20V62M74 20V62" stroke="rgba(0,0,0,.12)" stroke-width="1.2"/><circle cx="60" cy="16" r="1.6" fill="rgba(0,0,0,.35)"/>',
+    shorts: '<path d="M36 30H84M60 30V52" stroke="rgba(0,0,0,.25)" stroke-width="1.4"/><circle cx="60" cy="26" r="1.6" fill="rgba(0,0,0,.35)"/>',
+    vay: '<path d="M52 10 60 30 68 10" fill="none" stroke="rgba(0,0,0,.22)" stroke-width="1.4"/><path d="M42 52Q60 60 78 52" fill="none" stroke="rgba(0,0,0,.22)" stroke-width="1.4"/><path d="M52 70 48 106M60 72V106M68 70 72 106" stroke="rgba(0,0,0,.1)" stroke-width="1.2"/>',
+    khoac: '<path d="M50 10 60 36 70 10 60 22Z" fill="rgba(255,255,255,.38)" stroke="rgba(0,0,0,.2)" stroke-width="1.2"/><path d="M60 36V108" stroke="rgba(0,0,0,.25)" stroke-width="1.4"/><path d="M36 72h16v14H36zM68 72h16v14H68z" fill="none" stroke="rgba(0,0,0,.22)" stroke-width="1.2"/>',
+    giay: '<path d="M10 82H112V90H10z" fill="rgba(255,255,255,.55)" stroke="rgba(0,0,0,.15)" stroke-width="1"/><path d="M56 56l6 6M62 60l6 6M68 64l6 6" stroke="rgba(0,0,0,.3)" stroke-width="1.5" stroke-linecap="round"/>',
+    phukien: '<path d="M26 50H94L90 68H30Z" fill="rgba(255,255,255,.2)" stroke="rgba(0,0,0,.2)" stroke-width="1.2"/><path d="M40 50Q40 20 60 20Q80 20 80 50" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="3"/><circle cx="60" cy="68" r="3.4" fill="#D8B66A" stroke="rgba(0,0,0,.25)" stroke-width="1"/>'
+  };
+  function garment(cat, color, name) {
+    var k = kindOf(cat, name), d = SH[k] || SH.tee;
+    return '<svg viewBox="0 0 120 120" aria-hidden="true"><path d="' + d + '" fill="' + esc(color) + '" stroke="rgba(0,0,0,.22)" stroke-width="1.4" stroke-linejoin="round"/><path d="' + d + '" fill="url(#shade)"/>' + (DETAIL[k] || '') + '</svg>';
+  }
+  function glyph(cat) {
+    var k = cat === 'ao' ? 'tee' : cat === 'quan' ? 'pants' : cat;
+    return '<svg class="i" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round" aria-hidden="true"><path d="' + SH[k] + '"/></svg>';
+  }
+  function pic(it) { return it.photo ? '<img src="' + it.photo + '" alt="' + esc(it.name) + '">' : garment(it.cat, it.color, it.name); }
+
+  /* ---------- Thông báo & ngăn kéo ---------- */
+  var toastTimer;
+  function toast(msg) {
+    var t = $('#toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3200);
+  }
+  function openSheet(html, tall) {
+    var p = $('#sheet-panel'); p.className = 'sheet-panel' + (tall ? ' tall' : ''); p.innerHTML = html;
+    $('#sheet').hidden = false; p.scrollTop = 0; p.focus();
+  }
+  function closeSheet() { $('#sheet').hidden = true; $('#sheet-panel').innerHTML = ''; draft = { orig: null, url: null, cut: false, colorTouched: false, styles: [] }; }
+  function shHead(title, back) {
+    return '<div class="sh-head"><button class="round" data-act="close" aria-label="' + (back ? 'Quay lại' : 'Đóng') + '">' + ic(back ? 'back' : 'x') + '</button><h2>' + esc(title) + '</h2><span style="width:40px"></span></div>';
+  }
+
+  /* ---------- Phối đồ (thuật toán) ---------- */
+  function hsl(hex) {
+    var r = parseInt(hex.slice(1, 3), 16) / 255, g = parseInt(hex.slice(3, 5), 16) / 255, b = parseInt(hex.slice(5, 7), 16) / 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, s = 0, h = 0;
+    if (mx !== mn) {
+      var dd = mx - mn; s = l > .5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+      h = mx === r ? (g - b) / dd + (g < b ? 6 : 0) : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4; h *= 60;
+    }
+    return { h: h, s: s, l: l };
+  }
+  function neutral(hex) { var c = hsl(hex); return c.s < .2 || c.l < .15 || c.l > .85; }
+  function harmony(a, b) {
+    if (!a || !b) return 0;
+    if (neutral(a.color) || neutral(b.color)) return 1;
+    var d = Math.abs(hsl(a.color).h - hsl(b.color).h); d = d > 180 ? 360 - d : d;
+    return d < 30 ? .5 : d > 150 ? .3 : -1;
+  }
+  function rnd(str) { var h = 2166136261; str = str + ':' + S.seed; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 1000) / 1000; }
+  function target(t) { return t >= 28 ? 1 : t >= 21 ? 2 : 3; }
+  function score(it) {
+    var t = S.weather.t, rain = S.weather.r, slot = CATS[it.cat].slot, s = 0;
+    if (slot === 'top' || slot === 'bottom' || slot === 'dress') s -= 2 * Math.abs(it.warmth - target(t));
+    if (slot === 'outer') s -= 1.5 * Math.abs(it.warmth - (t < 14 ? 3 : 2));
+    if (S.style && it.styles.indexOf(S.style) > -1) s += 2;
+    /* Ưu tiên nhẹ theo hồ sơ, không loại trừ món đồ nào */
+    if (S.gender === 'female' && slot === 'dress') s += 1.1;
+    if (S.gender === 'male' && slot === 'bottom') s += .35;
+    if (rain && (slot === 'outer' || slot === 'shoes')) s += it.rain ? 3 : (slot === 'shoes' ? -1 : 0);
+    s += Math.min(idle(it), 60) / 20;
+    return s + rnd(it.id) * 1.5;
+  }
+  function bySlot(slot, n) {
+    return S.items.filter(function (i) { return CATS[i.cat].slot === slot; }).map(function (i) { return { it: i, s: score(i) }; })
+      .sort(function (a, b) { return b.s - a.s; }).slice(0, n);
+  }
+  function buildOutfits() {
+    var tops = bySlot('top', 4), bots = bySlot('bottom', 4), dress = bySlot('dress', 3), outs = bySlot('outer', 3), shoes = bySlot('shoes', 3), accs = bySlot('acc', 3);
+    var needOuter = S.weather.t < 22 || S.weather.r;
+    var bases = [];
+    tops.forEach(function (a) { bots.forEach(function (b) { bases.push({ parts: [a.it, b.it], s: a.s + b.s + harmony(a.it, b.it) * 1.5 }); }); });
+    dress.forEach(function (d) { bases.push({ parts: [d.it], s: d.s + .5 }); });
+    var outOpts = needOuter && outs.length ? outs : [null], shoeOpts = shoes.length ? shoes : [null], all = [];
+    bases.forEach(function (b) {
+      outOpts.forEach(function (o) {
+        shoeOpts.forEach(function (sh) {
+          var parts = b.parts.slice(), sc = b.s;
+          if (o) { parts.push(o.it); sc += o.s; }
+          if (sh) { parts.push(sh.it); sc += sh.s; }
+          all.push({ parts: parts, s: sc, base: b.parts.map(function (p) { return p.id; }).join('+') });
+        });
+      });
+    });
+    all.sort(function (a, b) { return b.s - a.s; });
+    var used = {}, out = [];
+    all.forEach(function (o) { if (out.length < 3 && !used[o.base]) { used[o.base] = 1; out.push(o); } });
+    if (accs.length) out.forEach(function (o, i) { o.parts.push(accs[i % accs.length].it); });
+    return { list: out, missing: { outer: needOuter && !outs.length, shoes: !shoes.length, base: !bases.length } };
+  }
+  function topStyle(o) {
+    var c = {}; o.parts.forEach(function (p) { p.styles.forEach(function (s) { c[s] = (c[s] || 0) + 1; }); });
+    var best = '', n = 0; Object.keys(c).forEach(function (k) { if (c[k] > n) { n = c[k]; best = k; } });
+    return S.style && c[S.style] ? S.style : best || 'Tự do';
+  }
+  function oldCount(o) { return o.parts.filter(function (p) { return idle(p) >= 30; }).length; }
+  function avgWarm(o) {
+    var n = 0, s = 0; o.parts.forEach(function (p) { var sl = CATS[p.cat].slot; if (sl === 'top' || sl === 'bottom' || sl === 'dress') { s += p.warmth; n++; } });
+    return n ? Math.round(s / n) : 2;
+  }
+  function compose(o) {
+    var big = o.parts.filter(function (p) { var s = CATS[p.cat].slot; return s === 'top' || s === 'bottom' || s === 'dress'; });
+    var small = o.parts.filter(function (p) { return big.indexOf(p) < 0; });
+    var cell = function (p) { return '<div class="cp">' + pic(p) + '</div>'; };
+    return (big.length ? '<div class="crow big">' + big.map(cell).join('') + '</div>' : '') + (small.length ? '<div class="crow small">' + small.map(cell).join('') + '</div>' : '');
+  }
+
+  /* ---------- Người mẫu ---------- */
+  function atBox(p, x, y, w, h, par) {
+    if (p.photo) return '<image href="' + p.photo + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" preserveAspectRatio="xMidYMid meet"/>';
+    return garment(p.cat, p.color, p.name).replace('<svg viewBox="0 0 120 120" aria-hidden="true">', '<svg viewBox="0 0 120 120" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" preserveAspectRatio="' + par + '" overflow="visible">');
+  }
+  function figure(o) {
+    var by = {}; o.parts.forEach(function (p) { by[CATS[p.cat].slot] = p; });
+    var s = '<svg class="fig" viewBox="0 0 240 410" role="img" aria-label="Outfit trên người mẫu"><g style="fill:var(--line)"><circle cx="120" cy="38" r="22"/><rect x="108" y="56" width="24" height="24" rx="8"/><rect x="82" y="72" width="76" height="134" rx="26"/><rect x="58" y="78" width="22" height="122" rx="11"/><rect x="160" y="78" width="22" height="122" rx="11"/><rect x="88" y="196" width="31" height="164" rx="14"/><rect x="121" y="196" width="31" height="164" rx="14"/></g>';
+    if (by.outer) s += atBox(by.outer, 40, 60, 160, 160, 'xMidYMin meet');
+    if (by.dress) s += atBox(by.dress, 52, 66, 136, 250, 'none');
+    else if (by.bottom) s += atBox(by.bottom, 70, 140, 100, 230, 'none');
+    if (by.top) s += atBox(by.top, 58, 64, 124, 130, 'xMidYMin meet');
+    if (by.shoes) s += atBox(by.shoes, 60, 352, 58, 54, 'xMidYMid meet') + '<g transform="translate(240,0) scale(-1,1)">' + atBox(by.shoes, 60, 352, 58, 54, 'xMidYMid meet') + '</g>';
+    if (by.acc) s += atBox(by.acc, 150, 194, 64, 64, 'xMidYMid meet');
+    return s + '</svg>';
+  }
+  function stage(o) {
+    return '<div class="stage">' + figure(o) + '<div class="plist">' + o.parts.map(function (p) {
+      return '<div class="pl"><div class="pt checker">' + pic(p) + '</div><span>' + SLOTNAME[CATS[p.cat].slot] + '<b>' + esc(p.name) + '</b></span></div>';
+    }).join('') + '</div></div>';
+  }
+  function aiOutfit() {
+    var ps = S.aiSet && S.aiSet.ids.map(itemBy).filter(Boolean);
+    return ps && ps.length >= 2 ? { parts: ps } : null;
+  }
+  function aiMix() {
+    /* Phối đồ bằng rules cục bộ: không gọi API, không cần khóa AI hay mạng. */
+    var occ = (S.occ || '').trim() || 'đi chơi thường ngày';
+    var result = buildOutfits(), candidates = result.list.slice();
+    if (!candidates.length) { S.aiSet = null; toast('Tủ đồ chưa đủ món để phối. Hãy thêm áo + quần hoặc váy.'); render(); return; }
+    var oKey = occ.toLowerCase();
+    function occasionScore(o) {
+      var score = o.parts.reduce(function (sum, p) {
+        var styles = (p.styles || []).join(' ').toLowerCase(), name = (p.name || '').toLowerCase(), cat = p.cat;
+        if (/đi làm|công sở|phỏng vấn/.test(oKey)) { if (/thanh lịch|tối giản/.test(styles)) sum += 3; if (/sơ mi|quần tây|blazer|giày da/.test(name)) sum += 2; }
+        if (/cà phê|cuối tuần|đi chơi|dạo phố/.test(oKey)) { if (/năng động|tối giản/.test(styles)) sum += 2; if (/sneaker|thun|jeans|denim/.test(name)) sum += 1.5; }
+        if (/hẹn|buổi tối|tiệc|sự kiện/.test(oKey)) { if (/thanh lịch/.test(styles)) sum += 3; if (/váy|giày da|túi/.test(name) || cat === 'vay') sum += 1.5; }
+        if (/du lịch|đi chơi xa|dã ngoại/.test(oKey)) { if (/năng động/.test(styles)) sum += 2; if (/chống nước|sneaker|khoác/.test(name) || p.rain) sum += 1; }
+        return sum;
+      }, 0);
+      return score + o.parts.reduce(function (sum, p) { return sum + Math.min(idle(p), 60) / 120; }, 0);
+    }
+    candidates.sort(function (a,b) { return occasionScore(b)-occasionScore(a); });
+    var picked = candidates[0];
+    S.aiSet = { ids: picked.parts.map(function (p) { return p.id; }), reason: 'Phối theo quy tắc: ưu tiên màu hài hoà, phong cách ' + topStyle(picked) + ', độ dày phù hợp thời tiết ' + S.weather.t + '°C' + (S.weather.r ? ' và có xét điều kiện trời mưa' : '') + '. Dịp sử dụng: ' + occ + '.', tip: oldCount(picked) ? 'Bạn đang tận dụng ' + oldCount(picked) + ' món lâu chưa mặc.' : 'Có thể đổi phụ kiện hoặc lớp áo khoác để tạo điểm nhấn.', occ: occ };
+    S.pick = 0;
+    toast('Đã phối outfit theo quy tắc có sẵn.');
+    render(); window.scrollTo(0, 0);
+  }
+
+  /* ---------- Trang chủ ---------- */
+  function renderHome() {
+    var w = S.weather, res = buildOutfits(), list = res.list, ai = aiOutfit();
+    if (S.aiSet && !ai) S.aiSet = null;
+    if (ai) { ai.reason = S.aiSet.reason; ai.tip = S.aiSet.tip; ai.occ = S.aiSet.occ; }
+    if (S.pick >= list.length) S.pick = 0;
+    var h = '<div class="hd"><div><button class="wx" data-act="settings" aria-label="Chỉnh thời tiết">' + ic(w.r ? 'rain' : 'sun') + '<b class="num">' + w.t + '°C</b><span>' + (w.r ? 'đang mưa' : 'nhập tay') + '</span></button><h1>Outfit hôm nay</h1><p class="sub" style="display:flex;align-items:center;gap:6px">Gợi ý từ tủ đồ của bạn · ' + (S.style || 'Phong cách tự do') + ' ' + ic('leaf').replace('class="i "', 'class="i" style="width:15px;height:15px;color:var(--primary)"') + '</p></div>' +
+      '<button class="btn soft" data-act="shuffle">' + ic('shuffle') + 'Đổi gợi ý</button></div>';
+    h += '<div class="aicard"><div class="ai-top">' + ic('spark') + 'Rule Stylist · phối đồ theo quy tắc</div><div class="trend-hint">' + ic('spark') + '<span>Áp dụng quy tắc phối màu, phong cách, nhiệt độ, mưa và dịp sử dụng. Chạy trực tiếp trên thiết bị, không gọi AI hay gửi dữ liệu ra ngoài.</span></div><div class="chips" role="group" aria-label="Gợi ý dịp" style="margin:0">' +
+      ['Đi làm', 'Cà phê cuối tuần', 'Hẹn tối', 'Đi chơi xa'].map(function (x) { return '<button class="chip" aria-pressed="' + (S.occ === x) + '" data-act="occ" data-v="' + x + '">' + x + '</button>'; }).join('') + '</div>' +
+      '<div class="ai-row"><input id="occ" type="text" placeholder="Hôm nay bạn đi đâu?" value="' + esc(S.occ) + '" aria-label="Dịp hôm nay"><button class="btn primary sm" data-act="aimix"' + (S.aiBusy ? ' disabled' : '') + '>' + (S.aiBusy ? 'Đang phối...' : 'Phối theo quy tắc') + '</button></div>' +
+      (ai ? '<button class="link" data-act="clearai">← Quay lại gợi ý tự động</button>' : '') + '</div>';
+    if (res.missing.base && !ai) return h + '<div class="note">Cần ít nhất một bộ áo và quần, hoặc một chiếc váy trong tủ để gợi ý. Bấm nút + bên dưới để thêm đồ.</div>';
+    var notes = [];
+    if (!ai && res.missing.outer) notes.push('Trời ' + (w.r ? 'mưa' : 'se lạnh') + ' nhưng tủ chưa có áo khoác.');
+    if (!ai && res.missing.shoes) notes.push('Tủ chưa có giày để ghép.');
+    if (notes.length) h += '<div class="note">' + notes.join(' ') + ' Thêm đồ để gợi ý đầy đủ hơn.</div>';
+    var o = ai || list[S.pick], key = ai ? 'ai' : S.pick, oc = oldCount(o);
+    h += '<section class="hero"><span class="tag">' + ic('spark') + (ai ? 'PHỐI THEO QUY TẮC: ' + esc(ai.occ).toUpperCase() : 'GỢI Ý HÔM NAY') + '</span>' +
+      '<button class="compose" data-act="outfit" data-i="' + key + '" aria-label="Xem chi tiết outfit">' + stage(o) + '</button>' +
+      (ai ? '<div class="ainote"><b>' + ic('spark') + 'Lý do gợi ý</b><p style="margin:0">' + esc(ai.reason) + '</p>' + (ai.tip ? '<p class="sub" style="margin:0">Mẹo: ' + esc(ai.tip) + '</p>' : '') + '</div>' : '') +
+      '<div class="feat"><div>' + ic('leaf') + '<span><b>Hợp ' + w.t + '°C</b><small>Độ dày: ' + WARM[avgWarm(o)] + '</small></span></div>' +
+      '<div>' + ic('recycle') + '<span><b>Dùng lại đồ sẵn có</b><small>' + (oc ? oc + ' món lâu chưa mặc' : 'Không cần mua mới') + '</small></span></div>' +
+      '<div>' + ic('hanger') + '<span><b>Phong cách</b><small>' + esc(topStyle(o)) + '</small></span></div></div>' +
+      '<button class="btn primary lg" data-act="wearset" data-i="' + key + '"><span style="display:flex;gap:8px;align-items:center">' + ic('leaf') + 'Mặc hôm nay</span>' + ic('chev') + '</button></section>';
+    var alts = list.map(function (x, i) { return { o: x, i: i }; }).filter(function (x) { return ai || x.i !== S.pick; });
+    if (alts.length) {
+      h += '<div class="sec-row"><h2>' + (ai ? 'Gợi ý tự động' : 'Gợi ý thay thế') + '</h2><button class="link" data-act="settings">Tuỳ chỉnh ' + ic('chev').replace('class="i "', 'class="i" style="width:16px;height:16px"') + '</button></div><div class="alts">' +
+        alts.map(function (x) {
+          var prev = x.o.parts.slice(0, 3).map(function (p) { return '<div class="cp">' + pic(p) + '</div>'; }).join('');
+          var oc2 = oldCount(x.o);
+          return '<div class="alt"><div class="alt-img">' + prev + '</div><div class="alt-body"><span class="pill">' + esc(topStyle(x.o)) + '</span><span class="sub">' + ic('leaf') + (oc2 ? 'Dùng lại ' + oc2 + ' món cũ' : 'Hợp ' + w.t + '°C') + '</span><button class="btn sm block" data-act="pick" data-i="' + x.i + '">' + ic('hanger').replace('class="i "', 'class="i" style="width:16px;height:16px"') + 'Chọn outfit</button></div></div>';
+        }).join('') + '</div>';
+    }
+    return h;
+  }
+  function settingsSheet() {
+    var w = S.weather;
+    openSheet(shHead('Thời tiết & phong cách') +
+      '<div class="fields"><div><span class="lbl">Thời tiết</span><div class="chips wrap" style="margin-top:6px">' + WEATHER.map(function (x) {
+        return '<button class="chip" aria-pressed="' + (w.t === x.t && w.r === x.r) + '" data-act="wx" data-t="' + x.t + '" data-r="' + (x.r ? 1 : 0) + '">' + x.label + '</button>';
+      }).join('') + '</div></div>' +
+      '<div><label class="lbl" for="temp">Nhiệt độ</label><div class="temp-row"><input id="temp" type="range" min="12" max="38" value="' + w.t + '"><output id="temp-out" class="num" for="temp">' + w.t + '°C</output></div></div>' +
+      '<label class="check"><input id="rain" type="checkbox"' + (w.r ? ' checked' : '') + '> Trời đang mưa</label>' +
+      '<div><span class="lbl">Phong cách</span><div class="chips wrap" style="margin-top:6px">' + STYLES.map(function (s) { return '<button class="chip" aria-pressed="' + (S.style === s) + '" data-act="style" data-s="' + s + '">' + s + '</button>'; }).join('') + '</div></div>' +
+      '<div><span class="lbl">Giao diện</span><div class="chips wrap" style="margin-top:6px">' + [{v:'system',t:'Theo máy'},{v:'light',t:'Sáng'},{v:'dark',t:'Tối'}].map(function(x){return '<button class="chip" aria-pressed="'+(S.theme===x.v)+'" data-act="theme" data-v="'+x.v+'">'+x.t+'</button>';}).join('') + '</div></div>' +
+      '<div><span class="lbl">Kiểu giao diện</span><div class="chips wrap" style="margin-top:6px">' + [{v:'soft',t:'Mềm mại'},{v:'solid',t:'Solid · rõ nét'}].map(function(x){return '<button class="chip" aria-pressed="'+(S.ui===x.v)+'" data-act="ui" data-v="'+x.v+'">'+x.t+'</button>';}).join('') + '</div><p class="sub">Solid dùng bề mặt tương phản hơn, nút nổi bật và thẻ rõ ràng.</p></div>' +
+      '<div><span class="lbl">Màu chủ đạo</span><div class="chips wrap" style="margin-top:6px">' + [{v:'sage',t:'Sage'},{v:'rose',t:'Hồng'},{v:'ocean',t:'Đại dương'},{v:'amber',t:'Hổ phách'},{v:'violet',t:'Tím'},{v:'coral',t:'San hô'},{v:'mint',t:'Bạc hà'},{v:'navy',t:'Xanh navy'},{v:'lavender',t:'Oải hương'},{v:'chocolate',t:'Nâu cacao'},{v:'slate',t:'Xám xanh'},{v:'lime',t:'Xanh chanh'},{v:'berry',t:'Berry'}].map(function(x){return '<button class="chip" aria-pressed="'+(S.accent===x.v)+'" data-act="accent" data-v="'+x.v+'"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+({'sage':'#55795A','rose':'#B65370','ocean':'#287A9B','amber':'#A86B17','violet':'#7856A8','coral':'#D65F50','mint':'#168B78','navy':'#3456A1','lavender':'#9673D0','chocolate':'#8B5E3C','slate':'#596B7B','lime':'#658B2E','berry':'#A23B72'}[x.v])+'"></span>'+x.t+'</button>';}).join('') + '</div></div>' +
+      '<div><span class="lbl">Giới tính / nhóm phong cách</span><p class="sub">Dùng để cá nhân hoá nhãn phân loại và ưu tiên gợi ý; không ẩn hay xoá bất kỳ món đồ nào.</p><div class="chips wrap" style="margin-top:6px">' + [{v:'female',t:'Nữ'},{v:'male',t:'Nam'},{v:'unisex',t:'Unisex'},{v:'any',t:'Không phân biệt'}].map(function(x){return '<button class="chip" aria-pressed="'+(S.gender===x.v)+'" data-act="gender" data-v="'+x.v+'">'+x.t+'</button>';}).join('') + '</div></div>' +
+      '<p class="sub">Gợi ý phối đồ chạy bằng rules cài sẵn trên thiết bị. Tuỳ chọn giao diện, màu và nhóm phong cách được lưu cho lần mở sau.</p></div>' +
+      '<button class="btn primary block" data-act="close">Xong</button>');
+  }
+  function outfitSheet(i) {
+    var o = i === 'ai' ? aiOutfit() : buildOutfits().list[i]; if (!o) return;
+    var saved = S.saved.some(function (x) { return x.ids.join() === o.parts.map(function (p) { return p.id; }).join(); });
+    openSheet(shHead('Chi tiết outfit', true) +
+      '<div class="hero" style="margin:0"><div class="compose" style="cursor:default">' + stage(o) + '</div></div>' +
+      '<div class="row"><span class="pill">' + ic('sun').replace('class="i "', 'class="i" style="width:13px;height:13px;vertical-align:-2px"') + ' ' + S.weather.t + '°C' + (S.weather.r ? ' · mưa' : '') + '</span><span class="pill">' + esc(topStyle(o)) + '</span><span class="pill">Độ dày: ' + WARM[avgWarm(o)] + '</span></div>' +
+      '<div class="list" style="margin:0">' + o.parts.map(function (p) {
+        return '<div class="lrow"><div class="th">' + pic(p) + '</div><div class="tx"><b>' + esc(p.name) + '</b><span class="sub">' + esc(p.brand || SLOTNAME[CATS[p.cat].slot]) + ' · Size ' + esc(p.size || '–') + '</span></div>' +
+          '<button class="heart ' + (p.fav ? 'on' : '') + '" style="position:static" data-act="fav" data-id="' + p.id + '" aria-label="Yêu thích">' + ic('heart') + '</button><button class="round" style="border:0;background:none" data-act="open" data-id="' + p.id + '" aria-label="Xem món đồ">' + ic('chev') + '</button></div>';
+      }).join('') + '</div>' +
+      '<div class="acts"><button class="btn primary" data-act="wearset" data-i="' + i + '">' + ic('leaf') + 'Mặc hôm nay</button><button class="btn" data-act="saveoutfit" data-i="' + i + '">' + ic('bookmark') + (saved ? 'Đã lưu' : 'Lưu outfit') + '</button></div>' +
+      '<div class="eco">' + ic('leaf') + '<div><b>Mặc lại đồ đã có</b><p class="sub">' + (oldCount(o) ? 'Outfit này dùng lại ' + oldCount(o) + ' món lâu chưa mặc, giảm nhu cầu mua mới.' : 'Mỗi lần mặc lại giúp giảm giá mỗi lần mặc và nhu cầu mua mới.') + '</p></div></div>');
+  }
+
+  /* ---------- Tủ đồ ---------- */
+  function closetGrid() {
+    var f = S.filter, q = S.q.trim().toLowerCase();
+    var list = S.items.filter(function (i) {
+      if (f === 'lau' ? !isStale(i) : (f !== 'all' && i.cat !== f)) return false;
+      if (S.genderFilter !== 'all' && (i.gender || 'unisex') !== S.genderFilter) return false;
+      return !q || (i.name + ' ' + (i.brand || '')).toLowerCase().indexOf(q) > -1;
+    });
+    if (!list.length) return '<div class="empty">' + (S.items.length ? 'Không có món nào khớp.' : 'Tủ đồ đang trống. Bấm nút + để chụp món đầu tiên.') + '</div>';
+    return list.map(function (it) {
+      var badge = it.listing ? '<span class="badge">' + (it.listing.mode === 'doi' ? 'Đang đổi' : it.listing.mode === 'kygui' ? 'Ký gửi' : 'Đang bán') + '</span>' : (isStale(it) ? '<span class="badge warn">' + (since(it.lastWorn) === null ? 'Chưa mặc' : idle(it) + ' ngày') + '</span>' : '');
+      return '<div class="citem"><button class="citem" style="width:100%" data-act="open" data-id="' + it.id + '" aria-label="' + esc(it.name) + '"><div class="ctile checker">' + pic(it) + badge + '</div><div class="nm">' + esc(it.name) + '</div></button>' +
+        '<button class="heart ' + (it.fav ? 'on' : '') + '" data-act="fav" data-id="' + it.id + '" aria-label="Yêu thích">' + ic('heart') + '</button></div>';
+    }).join('');
+  }
+  function renderCloset() {
+    var fl = [['all', 'Tất cả', 'grid'], ['ao', 'Áo'], ['quan', 'Quần'], ['vay', S.gender === 'male' ? 'Váy / đồ liền' : 'Váy / Đầm'], ['khoac', 'Áo khoác'], ['giay', 'Giày'], ['phukien', 'Phụ kiện'], ['lau', 'Lâu chưa mặc', 'clock']];
+    var visibleCount = S.items.filter(function (i) { return S.genderFilter === 'all' || (i.gender || 'unisex') === S.genderFilter; }).length;
+    var gf = [['all','Tất cả'],['male','Đồ nam'],['female','Đồ nữ'],['unisex','Unisex']];
+    return '<div class="hd"><div><h1>Tủ đồ của tôi</h1><p class="sub num">' + visibleCount + ' món trong bộ lọc · ' + S.items.filter(isStale).length + ' món 60+ ngày chưa mặc</p></div></div>' +
+      '<div class="chips wrap" role="group" aria-label="Lọc theo người mặc" style="margin-bottom:10px">' + gf.map(function (x) { return '<button class="chip" aria-pressed="' + (S.genderFilter === x[0]) + '" data-act="gender-filter" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="search">' + ic('search') + '<input id="q" type="text" placeholder="Tìm kiếm món đồ..." value="' + esc(S.q) + '" aria-label="Tìm kiếm món đồ"><button class="btn" data-act="add" aria-label="Thêm đồ">' + ic('plus') + '</button></div>' +
+      '<div class="chips" role="group" aria-label="Lọc theo loại">' + fl.map(function (x) { return '<button class="chip" aria-pressed="' + (S.filter === x[0]) + '" data-act="filter" data-f="' + x[0] + '">' + (x[2] ? ic(x[2]) : glyph(x[0])) + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="cgrid" id="cgrid">' + closetGrid() + '</div>';
+  }
+  function itemSheet(id, openList) {
+    var it = itemBy(id); if (!it) return;
+    var sug = Math.round(it.price * 0.4 / 1000) * 1000, l = it.listing;
+    var wornCost = it.wears ? vnd(it.price / it.wears).replace(' đ', 'đ') : 'Chưa có';
+    var last = sinceText(it.lastWorn);
+    var h = shHead(it.name, true) +
+      '<section class="item-detail">' +
+        '<div class="item-visual checker">' + pic(it) +
+          '<span class="item-visual-label">' + esc(catLabel(it.cat)) + '</span>' +
+          '<button class="heart item-hero-heart ' + (it.fav ? 'on' : '') + '" data-act="fav" data-id="' + it.id + '" aria-label="Yêu thích">' + ic('heart') + '</button>' +
+        '</div>' +
+        '<div class="item-photo-actions"><input id="item-photo-cam" class="vh" type="file" accept="image/*" capture="environment" data-item-id="' + it.id + '"><input id="item-photo-file" class="vh" type="file" accept="image/*" data-item-id="' + it.id + '"><button class="btn block" data-act="updatephoto" data-id="' + it.id + '">' + ic('camera') + 'Chụp ảnh mới</button><button class="btn block" data-act="retakephoto" data-id="' + it.id + '">' + ic('image') + 'Chọn từ thư viện</button></div>' +
+        '<div class="item-title-row"><div><span class="eyebrow">MÓN ĐỒ CỦA BẠN</span><h2>' + esc(it.name) + '</h2><p class="sub">' + esc(it.brand || 'Chưa thêm thương hiệu') + (it.size ? ' · Size ' + esc(it.size) : '') + '</p></div>' +
+          '<span class="item-color" style="background:' + esc(/^#[0-9a-f]{6}$/i.test(it.color || '') ? it.color : '#d9dfd6') + '" title="Màu đã lưu"></span>' +
+        '</div>' +
+        '<div class="field item-gender-field"><label for="item-gender">Nhãn người mặc</label><select id="item-gender" data-item-id="' + it.id + '"><option value="male"' + ((it.gender || 'unisex') === 'male' ? ' selected' : '') + '>Đồ nam</option><option value="female"' + ((it.gender || 'unisex') === 'female' ? ' selected' : '') + '>Đồ nữ</option><option value="unisex"' + ((it.gender || 'unisex') === 'unisex' ? ' selected' : '') + '>Unisex</option></select><small class="sub">Nhãn này dùng để lọc tủ đồ; không xóa hoặc ẩn món đồ khỏi dữ liệu.</small></div>' +
+        '<div class="item-tags"><span class="pill">' + WARM[it.warmth] + '</span>'
+          it.styles.map(function (s) { return '<span class="pill">' + esc(s) + '</span>'; }).join('') +
+          (it.rain ? '<span class="pill">Chống nước</span>' : '') +
+        '</div>' +
+        '<div class="item-stats">' +
+          '<div><span class="stat-icon">' + ic('recycle') + '</span><b class="num">' + it.wears + '</b><small>Lần đã mặc</small></div>' +
+          '<div><span class="stat-icon">' + ic('tag') + '</span><b class="num">' + wornCost + '</b><small>Chi phí/lần mặc</small></div>' +
+          '<div><span class="stat-icon">' + ic('clock') + '</span><b>' + esc(last) + '</b><small>Mặc gần nhất</small></div>' +
+        '</div>' +
+        '<div class="item-value"><span>Giá mua</span><b class="num">' + vnd(it.price) + '</b><p>Mặc lại thường xuyên giúp giảm chi phí trên mỗi lần sử dụng.</p></div>' +
+        '<button class="btn primary block item-main-action" data-act="wear" data-id="' + it.id + '">' + ic('leaf') + 'Đánh dấu đã mặc hôm nay</button>';
+    if (l) {
+      h += '<div class="eco">' + ic('tag') + '<div><b>Đang ' + (l.mode === 'doi' ? 'trao đổi' : l.mode === 'kygui' ? 'ký gửi' : 'bán') + '</b><p class="sub">' + (l.mode === 'doi' ? 'Muốn đổi lấy: ' + esc(l.wish || 'chưa ghi') : 'Giá ' + vnd(l.price)) + '</p></div></div>' +
+        '<div class="acts"><button class="btn primary" data-act="sold" data-id="' + it.id + '">Đã bán xong</button><button class="btn" data-act="unlist" data-id="' + it.id + '">Gỡ bài đăng</button></div>';
+    } else {
+      h += '<button class="btn block item-secondary-action" data-act="showlist"' + (openList ? ' hidden' : '') + '>' + ic('tag') + 'Đăng thanh lý hoặc trao đổi</button>' +
+        '<div id="listform" class="fields"' + (openList ? '' : ' hidden') + '>' +
+        '<div class="field"><label for="l-mode">Hình thức</label><select id="l-mode"><option value="ban">Bán</option><option value="doi">Trao đổi</option><option value="kygui">Ký gửi qua cửa hàng đối tác</option></select></div>' +
+        '<div class="field" id="l-price-w"><label for="l-price">Giá (đồng)</label><input id="l-price" type="number" inputmode="numeric" min="0" step="1000" value="' + sug + '"><span class="sub">Gợi ý khoảng 40% giá mua. Bạn có thể sửa.</span></div>' +
+        '<div class="field" id="l-wish-w" hidden><label for="l-wish">Muốn đổi lấy</label><input id="l-wish" type="text" placeholder="Ví dụ: áo khoác size M"></div>' +
+        '<button class="btn primary block" data-act="dolist" data-id="' + it.id + '">Đăng bài</button></div>';
+    }
+    h += S.confirm === 'del:' + it.id ? '<div class="acts"><button class="btn danger" data-act="del2" data-id="' + it.id + '">Xác nhận xoá</button><button class="btn" data-act="cancel-item" data-id="' + it.id + '">Giữ lại</button></div>' : '<button class="btn danger ghost block item-delete" data-act="del" data-id="' + it.id + '">' + ic('x') + 'Xoá khỏi tủ đồ</button>';
+    h += '</section>';
+    openSheet(h, true);
+  }
+
+  /* ---------- Thêm đồ ---------- */
+  function addSheet() {
+    draft = { orig: null, url: null, cut: false, colorTouched: false, styles: [] };
+    openSheet(shHead('Thêm món đồ') +
+      '<div class="cam"><div class="frame"><div><b>ĐẶT ĐỒ VÀO KHUNG</b><small>Nền một màu (tối hoặc sáng tương phản), đủ sáng, đồ nằm trọn khung, tránh bóng đổ mạnh</small></div></div>' +
+      '<div class="cam-row"><button class="round" data-act="pickfile" aria-label="Chọn ảnh từ thư viện">' + ic('image') + '</button><button class="shutter" data-act="shoot" aria-label="Chụp ảnh"></button><span style="width:40px"></span></div>' +
+      '<label class="check" style="font-size:13px"><input id="f-bg" type="checkbox" checked> Tự động tách nền</label>' +
+      '<div style="width:100%"><label class="lbl" for="f-sens" style="color:#C9DEC8">Mức tách nền</label><div class="row" style="flex-wrap:nowrap;font-size:12px"><span>Giữ nhiều</span><input id="f-sens" type="range" min="0" max="100" value="48" style="flex:1"><span>Tách mạnh</span></div></div></div>' +
+      '<input id="f-file" class="vh" tabindex="-1" aria-hidden="true" type="file" accept="image/*"><input id="f-cam" class="vh" tabindex="-1" aria-hidden="true" type="file" accept="image/*" capture="environment">' +
+      '<p class="sub" id="pv-status">Nút tròn mở camera. Ảnh xử lý ngay trên máy, không gửi đi đâu. Nên chụp trên nền trơn một màu để tách sạch hơn.</p>' +
+      '<div class="fields" id="crop-tools" hidden><div class="field"><label for="f-crop">Tỷ lệ cắt ảnh</label><select id="f-crop"><option value="original">Giữ nguyên tỷ lệ</option><option value="1:1">Vuông 1:1</option><option value="4:5">Dọc 4:5</option><option value="3:4">Dọc 3:4</option></select></div><div class="field"><label for="f-zoom">Thu phóng <span id="f-zoom-out">1.0×</span></label><input id="f-zoom" type="range" min="1" max="2.5" step="0.1" value="1"><small class="sub">Kéo thanh để phóng to và cắt gọn ảnh quanh trung tâm.</small></div><button class="btn" type="button" data-act="resetcrop">Đặt lại ảnh gốc</button></div>' +
+      '<div id="res"></div>' +
+      '<div class="fields">' +
+      '<div class="field"><label for="f-name">Tên món đồ</label><input id="f-name" type="text" placeholder="Ví dụ: Áo sơ mi trắng"></div>' +
+      '<div class="two"><div class="field"><label for="f-cat">Loại</label><select id="f-cat">' + Object.keys(CATS).map(function (k) { return '<option value="' + k + '">' + catLabel(k) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field"><label for="f-warm">Độ dày</label><select id="f-warm"><option value="1">Mát, mặc khi nóng</option><option value="2" selected>Vừa</option><option value="3">Ấm, mặc khi lạnh</option></select></div></div>' +
+      '<div class="field"><label for="f-gender">Phù hợp với</label><select id="f-gender"><option value="male"' + (S.gender === 'male' ? ' selected' : '') + '>Đồ nam</option><option value="female"' + (S.gender === 'female' ? ' selected' : '') + '>Đồ nữ</option><option value="unisex"' + (S.gender !== 'male' && S.gender !== 'female' ? ' selected' : '') + '>Unisex</option></select></div>' +
+      '<div class="two"><div class="field"><label for="f-color">Màu chủ đạo</label><input id="f-color" type="color" value="#55795A"></div>' +
+      '<div class="field"><label for="f-price">Giá mua (đồng)</label><input id="f-price" type="number" inputmode="numeric" min="0" step="1000" value="200000"></div></div>' +
+      '<div class="two"><div class="field"><label for="f-brand">Thương hiệu</label><input id="f-brand" type="text" placeholder="Không bắt buộc"></div>' +
+      '<div class="field"><label for="f-size">Size</label><input id="f-size" type="text" placeholder="M, 29, 39..."></div></div>' +
+      '<div class="field"><label>Phong cách</label><div class="chips wrap" id="f-styles">' + STYLES.map(function (s) { return '<button type="button" class="chip" aria-pressed="false" data-act="tgstyle" data-s="' + s + '">' + s + '</button>'; }).join('') + '</div></div>' +
+      '<label class="check"><input id="f-rain" type="checkbox"> Chống nước, đi mưa được</label>' +
+      '</div><button class="btn primary lg block" data-act="saveitem"><span style="display:flex;gap:8px;align-items:center">' + ic('hanger') + 'Lưu vào tủ đồ</span>' + ic('chev') + '</button>', true);
+  }
+  function loadImg(file) {
+    return new Promise(function (res, rej) {
+      var u = URL.createObjectURL(file), im = new Image();
+      im.onload = function () { URL.revokeObjectURL(u); res(im); };
+      im.onerror = function () { URL.revokeObjectURL(u); rej(new Error('img')); };
+      im.src = u;
+    });
+  }
+  function replaceItemPhoto(id, file) {
+    var it = itemBy(id); if (!it) return;
+    if (!file.type || file.type.indexOf('image/') !== 0) { toast('Chọn một tệp hình ảnh hợp lệ.'); return; }
+    toast('Đang cập nhật ảnh…');
+    loadImg(file).then(function (im) {
+      var scale = Math.min(1, 1400 / Math.max(im.width, im.height));
+      var c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(im.width * scale)); c.height = Math.max(1, Math.round(im.height * scale));
+      var ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(im, 0, 0, c.width, c.height);
+      var data = c.toDataURL('image/webp', .88);
+      // Không ghi đè nếu dữ liệu mới khiến localStorage vượt giới hạn.
+      var previous = it.photo; it.photo = data;
+      if (!save()) { it.photo = previous; save(); return; }
+      toast('Đã cập nhật ảnh cho “' + it.name + '”.');
+      itemSheet(id); render();
+    }).catch(function () { toast('Không đọc được ảnh. Hãy thử JPG, PNG hoặc WebP.'); });
+  }
+  function onFile(file) {
+    if ($('#pv-status')) $('#pv-status').textContent = 'Đang xử lý ảnh…';
+    loadImg(file).then(function (im) {
+      // Tăng độ phân giải xử lý lên 560px để cạnh sắc nét hơn, vẫn đủ nhanh trên điện thoại
+      var sc = Math.min(1, 560 / Math.max(im.width, im.height));
+      var c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(im.width * sc));
+      c.height = Math.max(1, Math.round(im.height * sc));
+      var ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(im, 0, 0, c.width, c.height);
+      draft.source = c; draft.zoom = 1; draft.ratio = 'original'; if ($('#crop-tools')) $('#crop-tools').hidden = false; if ($('#f-zoom')) $('#f-zoom').value = '1'; if ($('#f-zoom-out')) $('#f-zoom-out').textContent = '1.0×'; if ($('#f-crop')) $('#f-crop').value = 'original'; applyCrop();
+    }).catch(function () { toast('Không đọc được ảnh này. Thử ảnh JPG hoặc PNG.'); });
+  }
+  function applyCrop() {
+    if (!draft.source) return;
+    var src = draft.source, zoom = Math.max(1, +( $("#f-zoom") && $("#f-zoom").value || draft.zoom || 1));
+    var ratio = $("#f-crop") ? $("#f-crop").value : (draft.ratio || 'original');
+    draft.zoom = zoom; draft.ratio = ratio;
+    var sw = src.width, sh = src.height, target = ratio === '1:1' ? 1 : ratio === '4:5' ? .8 : ratio === '3:4' ? .75 : sw / sh;
+    var cw = sw, ch = sh;
+    if (cw / ch > target) cw = ch * target; else ch = cw / target;
+    cw /= zoom; ch /= zoom;
+    var sx = (sw - cw) / 2, sy = (sh - ch) / 2;
+    var out = document.createElement('canvas'); out.width = Math.max(1, Math.round(cw)); out.height = Math.max(1, Math.round(ch));
+    var ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(src, sx, sy, cw, ch, 0, 0, out.width, out.height);
+    draft.orig = out; draft.an = null;
+    if ($('#f-zoom-out')) $('#f-zoom-out').textContent = zoom.toFixed(1) + '×';
+    applyDraft();
+  }
+  /* ---------- Tách nền ----------
+     1) Ước lượng nền: nội suy màu Lab từ 4 cạnh ảnh (đã lọc trung vị để bỏ vật lạ), nên chịu được nền chuyển sáng tối và vignette.
+     2) Mỗi điểm ảnh có "khoảng cách" tới nền dự đoán. Bóng đổ chủ yếu đổi độ sáng nên độ sáng được tính nhẹ hơn màu.
+     3) Chọn ngưỡng bằng Otsu, lọc mảnh nhỏ, lấp lỗ nhỏ, làm mềm viền. */
+  function labOf(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    r = r > .04045 ? Math.pow((r + .055) / 1.055, 2.4) : r / 12.92;
+    g = g > .04045 ? Math.pow((g + .055) / 1.055, 2.4) : g / 12.92;
+    b = b > .04045 ? Math.pow((b + .055) / 1.055, 2.4) : b / 12.92;
+    var x = (r * .4124 + g * .3576 + b * .1805) / .95047, y = r * .2126 + g * .7152 + b * .0722, z = (r * .0193 + g * .1192 + b * .9505) / 1.08883;
+    var f = function (t) { return t > .008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; };
+    var fx = f(x), fy = f(y), fz = f(z);
+    return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+  }
+  function blur3(src, w, h) {
+    var tmp = new Float32Array(w * h), out = new Float32Array(w * h), x, y, i;
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) { i = y * w + x; tmp[i] = ((x > 0 ? src[i - 1] : src[i]) + src[i] + (x < w - 1 ? src[i + 1] : src[i])) / 3; }
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) { i = y * w + x; out[i] = ((y > 0 ? tmp[i - w] : tmp[i]) + tmp[i] + (y < h - 1 ? tmp[i + w] : tmp[i])) / 3; }
+    return out;
+  }
+  function sobelMag(src, w, h) {
+    var out = new Float32Array(w * h), x, y, g = function (xx, yy) { xx = xx < 0 ? 0 : xx >= w ? w - 1 : xx; yy = yy < 0 ? 0 : yy >= h ? h - 1 : yy; return src[yy * w + xx]; };
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+      var gx = (g(x + 1, y - 1) + 2 * g(x + 1, y) + g(x + 1, y + 1)) - (g(x - 1, y - 1) + 2 * g(x - 1, y) + g(x - 1, y + 1));
+      var gy = (g(x - 1, y + 1) + 2 * g(x, y + 1) + g(x + 1, y + 1)) - (g(x - 1, y - 1) + 2 * g(x, y - 1) + g(x + 1, y - 1));
+      out[y * w + x] = Math.hypot(gx, gy) / 4;
+    }
+    return out;
+  }
+  function boxMorph(src, w, h, r, wantMax) {
+    var tmp = new Uint8Array(w * h), out = new Uint8Array(w * h), x, y, k, v, i;
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+      v = wantMax ? 0 : 1;
+      for (k = -r; k <= r; k++) { var xx = x + k; if (xx < 0 || xx >= w) continue; var b = src[y * w + xx]; if (wantMax ? b : !b) { v = wantMax ? 1 : 0; break; } }
+      tmp[y * w + x] = v;
+    }
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+      v = wantMax ? 0 : 1;
+      for (k = -r; k <= r; k++) { var yy = y + k; if (yy < 0 || yy >= h) continue; var b2 = tmp[yy * w + x]; if (wantMax ? b2 : !b2) { v = wantMax ? 1 : 0; break; } }
+      out[y * w + x] = v;
+    }
+    return out;
+  }
+  function components(mask, w, h, val) {
+    var n = w * h, lab = new Int32Array(n), areas = [0], touch = [false], q = new Int32Array(n), cnt = 0;
+    for (var s = 0; s < n; s++) {
+      if (mask[s] !== val || lab[s]) continue;
+      cnt++; var qh = 0, qt = 0, tb = false; q[qt++] = s; lab[s] = cnt;
+      while (qh < qt) {
+        var p = q[qh++], x = p % w, y = (p - x) / w;
+        if (x === 0 || y === 0 || x === w - 1 || y === h - 1) tb = true;
+        if (x > 0 && mask[p - 1] === val && !lab[p - 1]) { lab[p - 1] = cnt; q[qt++] = p - 1; }
+        if (x < w - 1 && mask[p + 1] === val && !lab[p + 1]) { lab[p + 1] = cnt; q[qt++] = p + 1; }
+        if (y > 0 && mask[p - w] === val && !lab[p - w]) { lab[p - w] = cnt; q[qt++] = p - w; }
+        if (y < h - 1 && mask[p + w] === val && !lab[p + w]) { lab[p + w] = cnt; q[qt++] = p + w; }
+      }
+      areas.push(qt); touch.push(tb);
+    }
+    return { lab: lab, areas: areas, touch: touch, count: cnt };
+  }
+  function medianOf(arr) { var t = arr.slice().sort(function (p, q) { return p - q; }); return t[t.length >> 1]; }
+  /* Hồ sơ màu dọc một cạnh: trung vị qua bề dày dải viền. */
+  function rawProfile(ch, len, bw, at) {
+    var raw = new Float32Array(len * 3), i, c, k;
+    for (i = 0; i < len; i++) for (c = 0; c < 3; c++) {
+      var vals = []; for (k = 0; k < bw; k++) vals.push(ch[c][at(i, k)]);
+      raw[i * 3 + c] = medianOf(vals);
+    }
+    return raw;
+  }
+  /* Điểm viền lệch xa màu nền chủ đạo (tay áo, cổ áo chạm mép ảnh) bị loại và nội suy từ hai phía, rồi làm mượt bằng trung vị trượt. */
+  function cleanProfile(raw, len, ref) {
+    var bad = new Uint8Array(len), i, c, k;
+    for (i = 0; i < len; i++) bad[i] = Math.hypot(.45 * (raw[i * 3] - ref[0]), raw[i * 3 + 1] - ref[1], raw[i * 3 + 2] - ref[2]) > 14 ? 1 : 0;
+    var fixed = new Float32Array(len * 3);
+    for (i = 0; i < len; i++) {
+      if (!bad[i]) { for (c = 0; c < 3; c++) fixed[i * 3 + c] = raw[i * 3 + c]; continue; }
+      var lo = i - 1, hi = i + 1;
+      while (lo >= 0 && bad[lo]) lo--;
+      while (hi < len && bad[hi]) hi++;
+      for (c = 0; c < 3; c++) {
+        var vl = lo >= 0 ? raw[lo * 3 + c] : null, vh = hi < len ? raw[hi * 3 + c] : null;
+        fixed[i * 3 + c] = vl !== null && vh !== null ? vl + (vh - vl) * (i - lo) / (hi - lo) : vl !== null ? vl : vh !== null ? vh : ref[c];
+      }
+    }
+    var out = new Float32Array(len * 3), half = Math.max(4, Math.round(len * .04));
+    for (i = 0; i < len; i++) for (c = 0; c < 3; c++) {
+      var win = []; for (k = Math.max(0, i - half); k <= Math.min(len - 1, i + half); k++) win.push(fixed[k * 3 + c]);
+      out[i * 3 + c] = medianOf(win);
+    }
+    return out;
+  }
+  function analyzeData(d, w, h) {
+    var n = w * h, L = new Float32Array(n), A = new Float32Array(n), B = new Float32Array(n), i, c;
+    for (i = 0; i < n; i++) { var l = labOf(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); L[i] = l[0]; A[i] = l[1]; B[i] = l[2]; }
+    var ch = [L, A, B], bw = Math.max(3, Math.round(Math.min(w, h) * .03));
+    var rTop = rawProfile(ch, w, bw, function (x, k) { return k * w + x; });
+    var rBot = rawProfile(ch, w, bw, function (x, k) { return (h - 1 - k) * w + x; });
+    var rLft = rawProfile(ch, h, bw, function (y, k) { return y * w + k; });
+    var rRgt = rawProfile(ch, h, bw, function (y, k) { return y * w + (w - 1 - k); });
+    var ref = [0, 1, 2].map(function (cc) {
+      var all = []; [[rTop, w], [rBot, w], [rLft, h], [rRgt, h]].forEach(function (e) { for (var q = 0; q < e[1]; q++) all.push(e[0][q * 3 + cc]); });
+      return medianOf(all);
+    });
+    var top = cleanProfile(rTop, w, ref), bot = cleanProfile(rBot, w, ref), lft = cleanProfile(rLft, h, ref), rgt = cleanProfile(rRgt, h, ref);
+    var dist = new Float32Array(n), ring = [];
+    for (var y = 0; y < h; y++) {
+      var s = h > 1 ? y / (h - 1) : 0;
+      for (var x = 0; x < w; x++) {
+        var t = w > 1 ? x / (w - 1) : 0, p = y * w + x, pr = [0, 0, 0];
+        for (c = 0; c < 3; c++) {
+          var tl = top[c], tr = top[(w - 1) * 3 + c], bl = bot[c], br = bot[(w - 1) * 3 + c];
+          pr[c] = (1 - t) * lft[y * 3 + c] + t * rgt[y * 3 + c] + (1 - s) * top[x * 3 + c] + s * bot[x * 3 + c]
+            - ((1 - s) * (1 - t) * tl + (1 - s) * t * tr + s * (1 - t) * bl + s * t * br);
+        }
+        dist[p] = Math.hypot(.45 * (L[p] - pr[0]), A[p] - pr[1], B[p] - pr[2]);
+        if (x < bw || y < bw || x >= w - bw || y >= h - bw) ring.push(dist[p]);
+      }
+    }
+    var noise = medianOf(ring);
+    dist = blur3(dist, w, h);
+    var gL = sobelMag(blur3(L, w, h), w, h), gA = sobelMag(blur3(A, w, h), w, h), gB = sobelMag(blur3(B, w, h), w, h), grad = new Float32Array(n), gring = [];
+    for (i = 0; i < n; i++) {
+      grad[i] = Math.hypot(.6 * gL[i], gA[i], gB[i]);
+      var gx = i % w, gy = (i - gx) / w;
+      if (gx < bw || gy < bw || gx >= w - bw || gy >= h - bw) gring.push(grad[i]);
+    }
+    var baseG = Math.max(2, medianOf(gring) * 4 + 1.5);
+    var hist = new Float64Array(101), t2, sum = 0;
+    for (i = 0; i < n; i++) hist[Math.min(100, Math.round(dist[i]))]++;
+    for (t2 = 0; t2 <= 100; t2++) sum += t2 * hist[t2];
+    var wB = 0, sB = 0, best = 0, otsu = 10;
+    for (t2 = 0; t2 <= 100; t2++) {
+      wB += hist[t2]; if (!wB) continue; var wF = n - wB; if (!wF) break;
+      sB += t2 * hist[t2]; var mB = sB / wB, mF = (sum - sB) / wF, bt = wB * wF * (mB - mF) * (mB - mF);
+      if (bt > best) { best = bt; otsu = t2; }
+    }
+    var baseT = Math.max(Math.min(Math.max(otsu, 6), 32), noise * 4 + 5);
+    return { w: w, h: h, n: n, dist: dist, grad: grad, baseT: baseT, baseG: baseG };
+  }
+  function cutout(an, sens) {
+    var w = an.w, h = an.h, n = an.n, k = .5 + sens / 100, T = Math.max(4, an.baseT * k), G = Math.max(1.5, an.baseG * k), i, c;
+    /* Rào chắn = điểm khác màu nền hoặc nằm trên đường viền. Nền là vùng loang từ mép ảnh mà không vượt rào. */
+    var bar = new Uint8Array(n), dil = new Uint8Array(n);
+    for (i = 0; i < n; i++) bar[i] = an.dist[i] > T || an.grad[i] > G ? 1 : 0;
+    for (i = 0; i < n; i++) {
+      var x0 = i % w;
+      dil[i] = bar[i] || (x0 > 0 && bar[i - 1]) || (x0 < w - 1 && bar[i + 1]) || (i >= w && bar[i - w]) || (i < n - w && bar[i + w]) ? 1 : 0;
+    }
+    var reached = new Uint8Array(n), q = new Int32Array(n), qh = 0, qt = 0;
+    var seed = function (p) { if (!dil[p] && !reached[p]) { reached[p] = 1; q[qt++] = p; } };
+    for (i = 0; i < w; i++) { seed(i); seed((h - 1) * w + i); }
+    for (i = 0; i < h; i++) { seed(i * w); seed(i * w + w - 1); }
+    while (qh < qt) {
+      var p = q[qh++], px = p % w;
+      if (px > 0) seed(p - 1); if (px < w - 1) seed(p + 1); if (p >= w) seed(p - w); if (p < n - w) seed(p + w);
+    }
+    /* Mở vùng nền: các khe mỏng rò vào trong thân đồ bị cắt đứt, phần nền trong thân không còn nối ra mép nên được tính là đồ. */
+    var rr = Math.max(3, Math.round(Math.min(w, h) * .025)), bg1 = boxMorph(boxMorph(reached, w, h, rr, false), w, h, rr, true);
+    for (i = 0; i < n; i++) bg1[i] = bg1[i] && reached[i] ? 1 : 0;
+    var cb = components(bg1, w, h, 1), mask = new Uint8Array(n);
+    for (i = 0; i < n; i++) mask[i] = cb.lab[i] && cb.touch[cb.lab[i]] ? 0 : 1;
+    var er = new Uint8Array(n);   /* bù phần rào đã nở ra 1 điểm ảnh */
+    for (i = 0; i < n; i++) {
+      var x1 = i % w;
+      er[i] = mask[i] && (x1 === 0 || mask[i - 1]) && (x1 === w - 1 || mask[i + 1]) && (i < w || mask[i - w]) && (i >= n - w || mask[i + w]) ? 1 : 0;
+    }
+    mask = er;
+    var c1 = components(mask, w, h, 1), maxA = 0;
+    for (c = 1; c <= c1.count; c++) if (c1.areas[c] > maxA) maxA = c1.areas[c];
+    var keep = [false];
+    for (c = 1; c <= c1.count; c++) keep.push(c1.areas[c] >= Math.max(.1 * maxA, .004 * n));
+    for (i = 0; i < n; i++) mask[i] = c1.lab[i] && keep[c1.lab[i]] ? 1 : 0;
+    var fg = 0; for (i = 0; i < n; i++) fg += mask[i];
+    var frac = fg / n, f = new Float32Array(n);
+    for (i = 0; i < n; i++) f[i] = mask[i];
+    // Làm mềm viền 2 lần để cạnh mượt hơn, giảm răng cưa
+    f = blur3(blur3(f, w, h), w, h);
+    var alpha = new Uint8Array(n);
+    for (i = 0; i < n; i++) {
+      // Đường cong alpha mềm hơn (0.32 → 0.78) giúp viền tự nhiên hơn
+      var v = (f[i] - 0.32) / 0.46;
+      alpha[i] = v <= 0 ? 0 : v >= 1 ? 255 : Math.round(v * 255);
+    }
+    return { alpha: alpha, frac: frac, ok: frac > .03 && frac < .9 };
+  }
+  function avgColor(c) {
+    var d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, r = 0, g = 0, b = 0, n = 0;
+    // Lấy mẫu dày hơn và chỉ tính pixel đủ đậm (alpha cao) để màu chính xác hơn
+    for (var i = 0; i < d.length; i += 8) {
+      if (d[i + 3] > 180) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+    }
+    if (!n) return null;
+    var hx = function (v) { return ('0' + Math.round(v / n).toString(16)).slice(-2); };
+    return '#' + hx(r) + hx(g) + hx(b);
+  }
+  function applyDraft() {
+    if (!draft.orig) return;
+    var want = $('#f-bg').checked, c = document.createElement('canvas');
+    c.width = draft.orig.width; c.height = draft.orig.height;
+    var cx0 = c.getContext('2d');
+    cx0.imageSmoothingEnabled = true;
+    cx0.imageSmoothingQuality = 'high';
+    cx0.drawImage(draft.orig, 0, 0);
+    draft.cut = false;
+    if (want) {
+      /* Phân tích ở kích thước vừa đủ để giảm CPU/RAM trên điện thoại.
+         Mặt nạ alpha sau đó được nội suy lên ảnh gốc để giữ độ phân giải lưu trữ. */
+      if (!draft.an) {
+        var maxSide = 420, scale = Math.min(1, maxSide / Math.max(c.width, c.height));
+        var aw = Math.max(1, Math.round(c.width * scale)), ah = Math.max(1, Math.round(c.height * scale));
+        var ac = document.createElement('canvas'); ac.width = aw; ac.height = ah;
+        var ax = ac.getContext('2d', { willReadFrequently: true });
+        ax.imageSmoothingEnabled = true; ax.imageSmoothingQuality = 'high';
+        ax.drawImage(draft.orig, 0, 0, aw, ah);
+        draft.an = { data: analyzeData(ax.getImageData(0, 0, aw, ah).data, aw, ah), width: aw, height: ah };
+      }
+      var r = cutout(draft.an.data, +$('#f-sens').value);
+      if (r.ok) {
+        var mc = document.createElement('canvas'); mc.width = draft.an.width; mc.height = draft.an.height;
+        var mx = mc.getContext('2d'); var md = mx.createImageData(mc.width, mc.height);
+        for (var q = 0; q < r.alpha.length; q++) {
+          var alpha = r.alpha[q], k = q * 4;
+          md.data[k] = md.data[k + 1] = md.data[k + 2] = 255; md.data[k + 3] = alpha;
+        }
+        mx.putImageData(md, 0, 0);
+        var up = document.createElement('canvas'); up.width = c.width; up.height = c.height;
+        var ux = up.getContext('2d', { willReadFrequently: true });
+        ux.imageSmoothingEnabled = true; ux.imageSmoothingQuality = 'high';
+        ux.drawImage(mc, 0, 0, c.width, c.height);
+        var mask = ux.getImageData(0, 0, c.width, c.height).data;
+        var cx = c.getContext('2d'), im = cx.getImageData(0, 0, c.width, c.height);
+        for (var q2 = 0; q2 < im.data.length; q2 += 4) im.data[q2 + 3] = mask[q2 + 3];
+        cx.putImageData(im, 0, 0); draft.cut = true;
+      }
+    }
+    // Chất lượng webp cao hơn một chút để giữ chi tiết vải
+    draft.url = c.toDataURL('image/webp', 0.90);
+    var col = avgColor(c);
+    if (col && !draft.colorTouched) $('#f-color').value = col;
+    var colv = $('#f-color').value;
+    $('#res').innerHTML = '<span class="lbl">KẾT QUẢ SAU KHI LOẠI BỎ NỀN</span><div class="res" style="margin-top:6px"><div class="box checker"><img src="' + draft.url + '" alt="Ảnh món đồ sau khi xử lý"></div>' +
+      '<div class="autotag"><h3>' + ic('spark') + 'Thẻ tự nhận diện</h3><div class="kv"><i style="background:' + esc(colv) + '"></i><span><small>Màu</small>Lấy từ ảnh</span></div><div class="kv"><i></i><span><small>Nền</small>' + (draft.cut ? 'Đã tách' : 'Giữ ảnh gốc') + '</span></div><div class="kv"><i></i><span><small>Loại, độ dày</small>Chọn bên dưới</span></div></div></div>';
+    if (draft.cut) {
+      $('#pv-status').textContent = 'Đã tách nền. Nếu còn sót nền hoặc bị cắt mất phần đồ → kéo thanh "Mức tách nền" sang trái/phải.';
+    } else if (want) {
+      $('#pv-status').textContent = 'Chưa tách sạch. Thử: nền tương phản rõ hơn, đồ nằm trọn khung, hoặc kéo thanh "Mức tách nền".';
+    } else {
+      $('#pv-status').textContent = 'Giữ nguyên ảnh gốc (không tách nền).';
+    }
+  }
+  function saveItem() {
+    var cat = $('#f-cat').value;
+    var name = $('#f-name').value.trim() || CATS[cat].label + ' mới';
+    var it = {
+      id: uid(), name: name, brand: $('#f-brand').value.trim(), size: $('#f-size').value.trim(), cat: cat, gender: $('#f-gender').value || 'unisex', color: $('#f-color').value, warmth: +$('#f-warm').value, styles: draft.styles.slice(),
+      price: Math.max(0, +$('#f-price').value || 0), wears: 0, lastWorn: null, photo: draft.url, listing: null, rain: $('#f-rain').checked, fav: false
+    };
+    S.items.unshift(it);
+    if (save()) toast('Đã cất "' + name + '" vào tủ.');
+    closeSheet(); S.filter = 'all'; S.q = ''; S.page = 'closet'; render();
+  }
+
+  /* ---------- Marketplace ---------- */
+  function mcard(o, kind) {
+    var cond = kind === 'explore' ? (o.cond >= 90 ? 'Như mới' : 'Tốt') : condOf(o);
+    var priceTxt = o.mode === 'doi' ? 'Trao đổi' : vnd(o.mode === undefined ? 0 : o.price);
+    var photo = kind === 'explore' ? garment(o.cat, o.color, o.name) : pic(o);
+    var isFav = kind === 'explore' ? !!S.ofav[o.id] : false;
+    return '<div class="mcard"><button class="mcard" style="padding:0;box-shadow:none;width:100%;background:none" data-act="' + (kind === 'explore' ? 'oview' : 'open') + '" data-id="' + o.id + '" aria-label="' + esc(o.name) + '"><div class="photo"><span class="badge ' + (cond === 'Tốt' ? 'grey' : '') + '">' + cond + '</span>' + photo + (kind === 'sold' ? '<span class="sold-tag">ĐÃ BÁN</span>' : '') + '</div><div class="nm">' + esc(o.name) + '</div><div class="br">' + esc(o.brand || '') + '</div></button>' +
+      '<div class="pf"><span class="price num">' + (kind === 'sold' ? vnd(o.listing && o.listing.price || 0) : priceTxt) + '</span>' + (kind === 'explore' ? '<button class="heart ' + (isFav ? 'on' : '') + '" data-act="ofav" data-id="' + o.id + '" aria-label="Lưu">' + ic('heart') + '</button>' : '') + '</div></div>';
+  }
+  function marketGrid() {
+    var q = S.mq.trim().toLowerCase(), t = S.mtab, list, kind = t === 'explore' ? 'explore' : t;
+    var match = function (o) { return !q || (o.name + ' ' + (o.brand || '')).toLowerCase().indexOf(q) > -1; };
+    if (t === 'mine') list = S.items.filter(function (i) { return i.listing; }).map(function (i) { return Object.assign({}, i, { mode: i.listing.mode, price: i.listing.price }); }).filter(match);
+    else if (t === 'sold') list = S.sold.map(function (i) { return Object.assign({}, i, { mode: 'ban' }); }).filter(match);
+    else list = OTHERS.filter(function (o) { return (S.mfilter === 'all' || o.mode === S.mfilter) && match(o); });
+    if (!list.length) return '<div class="empty" style="grid-column:1/-1">' + (t === 'mine' ? 'Bạn chưa đăng món nào. Bấm "Bắt đầu" bên dưới để đăng món đầu tiên.' : t === 'sold' ? 'Chưa có món nào đã bán.' : 'Không có bài đăng nào khớp.') + '</div>';
+    return list.map(function (o) { return mcard(o, kind); }).join('');
+  }
+  function renderMarket() {
+    var stale = S.items.filter(function (i) { return isStale(i) && !i.listing; }).length;
+    var leaves = '<svg class="deco" viewBox="0 0 160 120" aria-hidden="true"><g fill="currentColor"><path d="M150 10C120 12 95 30 88 62c28-2 52-20 62-52z"/><path d="M110 70C86 66 62 78 52 102c24 4 50-8 58-32z"/><path d="M156 52c-22 4-38 18-42 40 20-2 36-16 42-40z"/></g></svg>';
+    return '<div class="relative">' + leaves + '<div class="hd" style="position:relative"><div><h1>Ký gửi &amp; Trao đổi</h1><p class="sub">Thời trang bền vững, cộng đồng xanh</p></div><span class="leaf-badge">' + ic('leaf') + '</span></div></div>' +
+      '<div class="mtabs" role="tablist">' + [['mine', 'Đồ của tôi'], ['explore', 'Khám phá'], ['sold', 'Đã bán']].map(function (x) { return '<button role="tab" aria-selected="' + (S.mtab === x[0]) + '" data-act="mtab" data-t="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="search">' + ic('search') + '<input id="mq" type="text" placeholder="Tìm kiếm đồ secondhand..." value="' + esc(S.mq) + '" aria-label="Tìm kiếm đồ secondhand"><span class="btn" style="display:grid;place-items:center">' + ic('sliders') + '</span></div>' +
+      (S.mtab === 'explore' ? '<div class="chips" role="group" aria-label="Lọc hình thức">' + [['all', 'Tất cả'], ['ban', 'Bán'], ['doi', 'Trao đổi'], ['kygui', 'Ký gửi']].map(function (x) { return '<button class="chip" aria-pressed="' + (S.mfilter === x[0]) + '" data-act="mf" data-f="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' : '') +
+      '<div class="mgrid" id="mgrid">' + marketGrid() + '</div>' +
+      '<div class="cta"><span class="ic">' + ic('tag') + '</span><div class="tx"><b>Đăng bán ngay</b><small>' + (stale ? stale + ' món lâu chưa mặc đang chờ bạn' : 'Ký gửi dễ dàng, trao đổi ý nghĩa') + '</small></div><button class="btn sm" data-act="startlist">Bắt đầu ' + ic('chev').replace('class="i "', 'class="i" style="width:14px;height:14px"') + '</button></div>' +
+      '<p class="sub" style="margin-top:12px">Ký gửi: cửa hàng đối tác bán hộ và giữ một phần tiền bán được, mức phí do từng cửa hàng đặt ra. Bài đăng ở mục Khám phá là dữ liệu mẫu.</p>';
+  }
+  function startListSheet() {
+    var c = S.items.filter(function (i) { return !i.listing; }).sort(function (a, b) { return idle(b) - idle(a); });
+    openSheet(shHead('Chọn món để đăng') + (c.length ? '<div class="list" style="margin:0">' + c.map(function (i) {
+      return '<button class="lrow" style="text-align:left;width:100%" data-act="openlist" data-id="' + i.id + '"><div class="th checker">' + pic(i) + '</div><div class="tx"><b>' + esc(i.name) + '</b><span class="sub">' + (since(i.lastWorn) === null ? 'Chưa mặc lần nào' : 'Mặc gần nhất: ' + sinceText(i.lastWorn)) + '</span></div>' + ic('chev') + '</button>';
+    }).join('') + '</div>' : '<div class="empty">Tủ đồ trống hoặc mọi món đã được đăng.</div>'));
+  }
+  function oviewSheet(id) {
+    var o = OTHERS.filter(function (x) { return x.id === id; })[0]; if (!o) return;
+    openSheet(shHead(o.name, true) +
+      '<div class="big-tile" style="background:var(--photo)">' + garment(o.cat, o.color, o.name) + '</div>' +
+      '<div class="row"><span class="pill">' + MODES[o.mode] + '</span><span class="pill">' + (o.cond >= 90 ? 'Như mới' : 'Tốt') + ' · còn ' + o.cond + '%</span><span class="pill">Size ' + esc(o.size) + '</span></div>' +
+      '<div><div class="price num" style="font-size:22px">' + (o.mode === 'doi' ? 'Muốn đổi lấy: ' + esc(o.wish) : vnd(o.price)) + '</div><p class="sub">' + esc(o.brand) + ' · ' + esc(o.place) + ' · Người đăng: ' + esc(o.who) + '</p></div>' +
+      '<div class="acts"><button class="btn primary" data-act="msg" data-who="' + esc(o.who) + '">Nhắn ' + esc(o.who) + '</button><button class="btn" data-act="ofav" data-id="' + o.id + '" data-keep="1">' + ic('heart') + (S.ofav[o.id] ? 'Đã lưu' : 'Lưu') + '</button></div>');
+  }
+
+  /* ---------- Hồ sơ ---------- */
+  function renderProfile() {
+    var wears = S.items.reduce(function (a, i) { return a + i.wears; }, 0);
+    var favs = S.items.filter(function (i) { return i.fav; });
+    var h = '<div class="hd"><div><h1>Hồ sơ</h1><p class="sub">Tủ đồ của bạn đang làm việc chăm chỉ thế nào</p></div><span class="leaf-badge">' + ic('user') + '</span></div>' +
+      '<button class="btn block" style="margin-bottom:14px" data-act="settings">' + ic('sliders') + ' Cài đặt giao diện & phong cách</button><div class="pstats"><div class="pstat"><b class="num">' + S.items.length + '</b><span>món trong tủ</span></div><div class="pstat"><b class="num">' + wears + '</b><span>lần mặc tổng</span></div><div class="pstat"><b class="num">' + S.sold.length + '</b><span>món đã trao tay</span></div></div>';
+    h += '<div class="sec-row"><h2>Yêu thích</h2></div>' + (favs.length ? '<div class="cgrid" style="margin-bottom:18px">' + favs.map(function (it) {
+      return '<button class="citem" data-act="open" data-id="' + it.id + '"><div class="ctile checker">' + pic(it) + '</div><div class="nm">' + esc(it.name) + '</div></button>';
+    }).join('') + '</div>' : '<p class="sub" style="margin-bottom:18px">Chạm vào trái tim ở món đồ để lưu vào đây.</p>');
+    h += '<div class="sec-row"><h2>Outfit đã lưu</h2></div>' + (S.saved.length ? '<div class="list">' + S.saved.map(function (s) {
+      var its = s.ids.map(itemBy).filter(Boolean);
+      return '<div class="lrow"><div class="thumbs">' + its.slice(0, 4).map(function (p) { return '<div class="th">' + pic(p) + '</div>'; }).join('') + '</div><div class="tx"><b>' + its.length + ' món</b><span class="sub">' + new Date(s.date).toLocaleDateString('vi-VN') + '</span></div></div>';
+    }).join('') + '</div>' : '<p class="sub" style="margin-bottom:18px">Bấm "Lưu outfit" trong chi tiết outfit để giữ lại.</p>');
+    h += '<div class="sec-row"><h2>Lịch sử mặc</h2></div>' + (S.log.length ? '<div class="list">' + S.log.slice(0, 6).map(function (s) {
+      var its = s.ids.map(itemBy).filter(Boolean);
+      return '<div class="lrow"><div class="thumbs">' + its.slice(0, 4).map(function (p) { return '<div class="th">' + pic(p) + '</div>'; }).join('') + '</div><div class="tx"><b>' + new Date(s.date).toLocaleDateString('vi-VN') + '</b><span class="sub">' + its.length + ' món</span></div></div>';
+    }).join('') + '</div>' : '<p class="sub">Chưa có lịch sử. Bấm "Mặc hôm nay" ở trang chủ.</p>');
+    h += '<div class="foot">Dữ liệu lưu ngay trên trình duyệt này. ' + (S.confirm === 'reset' ? '<button class="btn sm danger" data-act="reset2">Xác nhận đặt lại</button><button class="btn sm ghost" data-act="cancel">Huỷ</button>' : '<button class="btn sm ghost" data-act="reset">Đặt lại dữ liệu mẫu</button>') + '</div>';
+    return h;
+  }
+
+  /* ---------- Hiển thị ---------- */
+  function renderTabs() {
+    var T = [['home', 'Trang chủ', 'home'], ['closet', 'Tủ đồ', 'closet'], ['add', 'Thêm', 'plus'], ['market', 'Marketplace', 'bag'], ['profile', 'Hồ sơ', 'user']];
+    $('#tabs').innerHTML = T.map(function (t) {
+      if (t[0] === 'add') return '<button class="plus" data-act="add" aria-label="Thêm đồ"><span class="c">' + ic('plus') + '</span>Thêm</button>';
+      return '<button data-act="page" data-p="' + t[0] + '"' + (S.page === t[0] ? ' aria-current="page"' : '') + '>' + ic(t[2]) + t[1] + '</button>';
+    }).join('');
+  }
+  function render() {
+    var p = S.page;
+    $('#view').innerHTML = p === 'home' ? renderHome() : p === 'closet' ? renderCloset() : p === 'market' ? renderMarket() : renderProfile();
+    renderTabs();
+  }
+  function wearItems(ids) {
+    var now = new Date().toISOString();
+    ids.forEach(function (x) { var p = itemBy(x); if (p) { p.wears++; p.lastWorn = now; } });
+    S.log.unshift({ date: now, ids: ids }); save();
+  }
+  function ids(o) { return o.parts.map(function (p) { return p.id; }); }
+
+  /* ---------- Sự kiện ---------- */
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]'); if (!el) return;
+    var a = el.dataset.act, id = el.dataset.id, it, i, o;
+    if (a === 'page') { S.page = el.dataset.p; S.confirm = ''; if (!$('#sheet').hidden) closeSheet(); render(); window.scrollTo(0, 0); }
+    else if (a === 'filter') { S.filter = el.dataset.f; render(); }
+    else if (a === 'gender-filter') { S.genderFilter = el.dataset.v; render(); }
+    else if (a === 'mtab') { S.mtab = el.dataset.t; render(); }
+    else if (a === 'mf') { S.mfilter = el.dataset.f; render(); }
+    else if (a === 'add') addSheet();
+    else if (a === 'settings') settingsSheet();
+    else if (a === 'theme') { S.theme = el.dataset.v; applyAppearance(); save(); settingsSheet(); }
+    else if (a === 'accent') { S.accent = el.dataset.v; applyAppearance(); save(); settingsSheet(); }
+    else if (a === 'ui') { S.ui = el.dataset.v; applyAppearance(); save(); settingsSheet(); }
+    else if (a === 'gender') { S.gender = el.dataset.v; save(); settingsSheet(); if (S.page === 'closet') render(); }
+    else if (a === 'open') itemSheet(id);
+    else if (a === 'oview') oviewSheet(id);
+    else if (a === 'close') { S.confirm = ''; closeSheet(); }
+    else if (a === 'shuffle') { S.aiSet = null; S.seed++; S.pick = 0; render(); }
+    else if (a === 'pick') { S.aiSet = null; S.pick = +el.dataset.i; render(); window.scrollTo(0, 0); }
+    else if (a === 'outfit') outfitSheet(el.dataset.i === 'ai' ? 'ai' : +el.dataset.i);
+    else if (a === 'aimix') aiMix();
+    else if (a === 'occ') { S.occ = S.occ === el.dataset.v ? '' : el.dataset.v; render(); }
+    else if (a === 'clearai') { S.aiSet = null; render(); }
+    else if (a === 'wearset') {
+      var k0 = el.dataset.i === 'ai' ? 'ai' : +el.dataset.i;
+      o = k0 === 'ai' ? aiOutfit() : buildOutfits().list[k0]; if (!o) return;
+      wearItems(ids(o)); S.aiSet = null; S.seed++; S.pick = 0; closeSheet(); toast('Đã ghi nhận bộ đồ hôm nay. Chúc bạn một ngày vui!'); render();
+    }
+    else if (a === 'saveoutfit') {
+      var k1 = el.dataset.i === 'ai' ? 'ai' : +el.dataset.i;
+      o = k1 === 'ai' ? aiOutfit() : buildOutfits().list[k1]; if (!o) return;
+      var key = ids(o).join();
+      if (!S.saved.some(function (x) { return x.ids.join() === key; })) { S.saved.unshift({ ids: ids(o), date: new Date().toISOString() }); save(); toast('Đã lưu outfit vào Hồ sơ.'); }
+      outfitSheet(k1);
+    }
+    else if (a === 'fav') {
+      e.stopPropagation(); it = itemBy(id); it.fav = !it.fav; save();
+      if (!$('#sheet').hidden && $('#sheet-panel').querySelector('.lrow')) { el.classList.toggle('on', it.fav); }
+      else render();
+    }
+    else if (a === 'ofav') { if (S.ofav[id]) delete S.ofav[id]; else S.ofav[id] = 1; save(); if (el.dataset.keep) oviewSheet(id); else { el.classList.toggle('on', !!S.ofav[id]); } }
+    else if (a === 'tgstyle') { var s = el.dataset.s; i = draft.styles.indexOf(s); if (i > -1) draft.styles.splice(i, 1); else draft.styles.push(s); el.setAttribute('aria-pressed', i === -1); }
+    else if (a === 'updatephoto' || a === 'retakephoto') { var pf = $(a === 'updatephoto' ? '#item-photo-cam' : '#item-photo-file'); if (pf) { pf.dataset.itemId = id; pf.click(); } }
+    else if (a === 'pickfile') $('#f-file').click();
+    else if (a === 'shoot') $('#f-cam').click();
+    else if (a === 'resetcrop') { if (draft.source) { $('#f-zoom').value = '1'; $('#f-crop').value = 'original'; applyCrop(); } }
+    else if (a === 'saveitem') saveItem();
+    else if (a === 'wear') { wearItems([id]); it = itemBy(id); toast('Đã ghi: mặc "' + it.name + '" hôm nay.'); render(); itemSheet(id); }
+    else if (a === 'showlist') { $('#listform').hidden = false; el.hidden = true; }
+    else if (a === 'startlist') startListSheet();
+    else if (a === 'openlist') itemSheet(id, true);
+    else if (a === 'dolist') {
+      it = itemBy(id); it.listing = { mode: $('#l-mode').value, price: Math.max(0, +$('#l-price').value || 0), wish: $('#l-wish').value.trim() };
+      save(); closeSheet(); S.page = 'market'; S.mtab = 'mine'; toast('Đã đăng "' + it.name + '" lên Marketplace.'); render(); window.scrollTo(0, 0);
+    }
+    else if (a === 'unlist') { it = itemBy(id); it.listing = null; save(); toast('Đã gỡ bài đăng.'); render(); itemSheet(id); }
+    else if (a === 'sold') {
+      it = itemBy(id); S.sold.unshift(Object.assign({}, it, { soldAt: new Date().toISOString() }));
+      S.items = S.items.filter(function (x) { return x.id !== id; }); save(); closeSheet(); S.mtab = 'sold'; toast('Chúc mừng! Món đồ đã có chủ mới.'); render();
+    }
+    else if (a === 'del') { S.confirm = 'del:' + id; itemSheet(id); }
+    else if (a === 'cancel-item') { S.confirm = ''; itemSheet(id); }
+    else if (a === 'del2') { S.items = S.items.filter(function (x) { return x.id !== id; }); S.confirm = ''; save(); closeSheet(); toast('Đã xoá khỏi tủ đồ.'); render(); }
+    else if (a === 'reset') { S.confirm = 'reset'; render(); }
+    else if (a === 'reset2') { S.items = seedItems(); S.sold = []; S.saved = []; S.log = []; S.confirm = ''; S.filter = 'all'; S.genderFilter = 'all'; save(); toast('Đã đặt lại dữ liệu mẫu.'); render(); }
+    else if (a === 'cancel') { S.confirm = ''; render(); }
+    else if (a === 'wx') { S.weather = { t: +el.dataset.t, r: el.dataset.r === '1' }; save(); S.seed++; S.pick = 0; render(); settingsSheet(); }
+    else if (a === 'style') { S.style = S.style === el.dataset.s ? '' : el.dataset.s; save(); S.pick = 0; render(); settingsSheet(); }
+    else if (a === 'msg') toast('Bản thử nghiệm chưa có tin nhắn. Bản đầy đủ sẽ mở khung chat với ' + el.dataset.who + '.');
+  });
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if ((t.id === 'f-file' || t.id === 'f-cam') && t.files && t.files[0]) { onFile(t.files[0]); t.value = ''; }
+    else if ((t.id === 'item-photo-file' || t.id === 'item-photo-cam') && t.files && t.files[0]) { replaceItemPhoto(t.dataset.itemId, t.files[0]); t.value = ''; }
+    else if (t.id === 'f-bg') applyDraft();
+    else if (t.id === 'f-crop') applyCrop();
+    else if (t.id === 'f-color') draft.colorTouched = true;
+    else if (t.id === 'l-mode') { $('#l-price-w').hidden = t.value === 'doi'; $('#l-wish-w').hidden = t.value !== 'doi'; }
+    else if (t.id === 'item-gender') { var gi = itemBy(t.dataset.itemId); if (gi) { gi.gender = t.value; save(); if (S.page === 'closet') render(); toast('Đã cập nhật nhãn người mặc.'); } }
+    else if (t.id === 'rain') { S.weather.r = t.checked; save(); S.seed++; S.pick = 0; render(); }
+    else if (t.id === 'temp') { save(); S.seed++; S.pick = 0; render(); }
+  });
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.id === 'temp') { S.weather.t = +t.value; $('#temp-out').textContent = S.weather.t + '°C'; }
+    else if (t.id === 'f-sens') { clearTimeout(sensT); sensT = setTimeout(applyDraft, 120); }
+    else if (t.id === 'f-zoom') { clearTimeout(sensT); sensT = setTimeout(applyCrop, 160); }
+    else if (t.id === 'occ') S.occ = t.value;
+    else if (t.id === 'q') { S.q = t.value; $('#cgrid').innerHTML = closetGrid(); }
+    else if (t.id === 'mq') { S.mq = t.value; $('#mgrid').innerHTML = marketGrid(); }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
+
+  load(); applyAppearance(); render();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>

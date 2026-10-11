@@ -1,0 +1,32 @@
+{
+  "name": "Tủ Đồ Ảo",
+  "short_name": "Tủ Đồ Ảo",
+  "description": "Tủ đồ kỹ thuật số, gợi ý phối đồ theo thời tiết, ký gửi và trao đổi đồ cũ.",
+  "lang": "vi",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF9F4",
+  "theme_color": "#55795A",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
